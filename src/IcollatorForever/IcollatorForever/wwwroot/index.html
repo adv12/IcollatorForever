@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<!--
+Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+See license.txt in the FileSharper distribution or repository for the
+full text of the license.
+-->
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Icollator Forever</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/site.css" rel="stylesheet" />
+    <script type="text/javascript">
+
+        function loadFiles(files) {
+            for (var i = 0; i < files.length; i++) {
+                addIconFile(files[i]);
+            }
+        }
+
+        function addIconFile(file) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                DotNet.invokeMethod('IcollatorForever', 'AddFile', file.name, btoa(reader.result));
+            }
+            reader.readAsBinaryString(file);
+        }
+
+    </script>
+</head>
+<body>
+    <app>Loading...</app>
+
+    <script type="text/javascript">
+        setInterval(function () {
+            var input = document.getElementById("mainFileInput");
+            if (input) {
+                var parent = input.parentNode;
+                var files = input.files;
+                if (files && files.length > 0) {
+                    parent.removeChild(input);
+                    loadFiles(files);
+                    var newInput = document.createElement("input");
+                    var names = input.getAttributeNames();
+                    for (var i = 0; i < names.length; i++) {
+                        var name = names[i];
+                        newInput.setAttribute(name, input.getAttribute(name));
+                    }
+                    parent.appendChild(newInput);
+                }
+
+            }
+        }, 1000);
+    </script>
+    <script src="_framework/components.webassembly.js"></script>
+</body>
+</html>

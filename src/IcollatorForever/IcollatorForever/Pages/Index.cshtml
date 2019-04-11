@@ -1,0 +1,97 @@
+﻿<!--
+Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+See license.txt in the FileSharper distribution or repository for the
+full text of the license.
+-->
+
+@page "/"
+
+    <div id="inputContainer">
+        <div><input id="mainFileInput" class="fileInput" type="file" data-multiple-caption="{count} files selected" multiple /></div>
+        <div>
+            <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
+        </div>
+    </div>
+    <div id="iconTableContainer">
+        @if (_entries.Count > 0)
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>XOR Image</th>
+                        <th>AND Image</th>
+                        <th>Source File Name</th>
+                        <th>Source Index</th>
+                        <th>Width</th>
+                        <th>Height</th>
+                        <th>Bit Count</th>
+                        <th>Color Count</th>
+                        <th>Size in Bytes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (IconEntry entry in _entries)
+                    {
+                        <tr>
+                            <td><img src="data:image/jpeg;base64,@(entry.XorJpegString)" /></td>
+                            <td><img src="data:image/jpeg;base64,@(entry.AndJpegString)" /></td>
+                            <td>@entry.SourceFileName</td>
+                            <td>@entry.SourceIndex</td>
+                            <td>@entry.Width</td>
+                            <td>@entry.Height</td>
+                            <td>@entry.BitCount</td>
+                            <td>@entry.ColorCount</td>
+                            <td>@entry.SizeInBytes</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+<div id="iconTableButtonContainer">
+    <button class="btn btn-primary" onclick="alert('saved!')">Save to .ico</button>
+</div>
+
+@foreach (Exception ex in _exceptions)
+{
+    <div>@ex.ToString()</div>
+}
+
+@functions {
+    static Index _instance;
+
+    List<IconEntry> _entries = new List<IconEntry>();
+
+    List<Exception> _exceptions = new List<Exception>();
+
+    [JSInvokable("AddFile")]
+    public static void AddFile(string filename, string base64contents)
+    {
+        _instance.TryAddFile(filename, base64contents);
+    }
+
+    private void TryAddFile(string filename, string base64contents)
+    {
+        byte[] contents = Convert.FromBase64String(base64contents);
+        try
+        {
+            using (MemoryStream stream = new MemoryStream(contents))
+            {
+                _entries.AddRange(IconUtils.GetList(filename, stream));
+            }
+            //System.out.println("on file " + i);
+        }
+        catch (Exception e)
+        {
+            _exceptions.Add(e);
+        }
+        _entries.Sort();
+        StateHasChanged();
+    }
+
+    protected override void OnInit()
+    {
+        _instance = this;
+        base.OnInit();
+    }
+}
