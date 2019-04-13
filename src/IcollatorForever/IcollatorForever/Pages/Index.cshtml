@@ -6,63 +6,79 @@ full text of the license.
 
 @page "/"
 
-    <div id="inputContainer">
-        <div><input id="mainFileInput" class="fileInput" type="file" data-multiple-caption="{count} files selected" multiple /></div>
-        <div>
-            <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
-        </div>
+<div id="inputContainer">
+    <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon" multiple /></div>
+    <div>
+        <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
     </div>
-    <div id="iconTableContainer">
-        @if (_entries.Count > 0)
-        {
-            <table>
-                <thead>
-                    <tr>
-                        <th>XOR Image</th>
-                        <th>AND Image</th>
-                        <th>Source File Name</th>
-                        <th>Source Index</th>
-                        <th>Width</th>
-                        <th>Height</th>
-                        <th>Bit Count</th>
-                        <th>Color Count</th>
-                        <th>Size in Bytes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (IconEntry entry in _entries)
+</div>
+<div id="iconTableContainer">
+    @if (_entries.Count > 0)
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>XOR Image</th>
+                    <th>AND Image</th>
+                    <th>Source File Name</th>
+                    <th>Source Index</th>
+                    <th>Width</th>
+                    <th>Height</th>
+                    <th>Bit Count</th>
+                    <th>Color Count</th>
+                    <th>Size in Bytes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (IIconEntry entry in _entries)
+                {
+                    IconEntryDescription description = entry.Description;
+                <tr>
+                    @if (entry.HasAndImage)
                     {
-                        <tr>
-                            <td><img src="data:image/jpeg;base64,@(entry.XorJpegString)" /></td>
-                            <td><img src="data:image/jpeg;base64,@(entry.AndJpegString)" /></td>
-                            <td>@entry.SourceFileName</td>
-                            <td>@entry.SourceIndex</td>
-                            <td>@entry.Width</td>
-                            <td>@entry.Height</td>
-                            <td>@entry.BitCount</td>
-                            <td>@entry.ColorCount</td>
-                            <td>@entry.SizeInBytes</td>
-                        </tr>
+                        <td><img src="data:image/jpeg;base64,@(entry.XorImage.ToBase64JpegString())" /></td>
+                        <td><img src="data:image/jpeg;base64,@(entry.AndImage.ToBase64JpegString())" /></td>
                     }
-                </tbody>
-            </table>
-        }
-    </div>
-<div id="iconTableButtonContainer">
-    <button class="btn btn-primary" onclick="alert('saved!')">Save to .ico</button>
+                    else
+                    {
+                        <td colspan="2"><img src="data:image/jpeg;base64,@(entry.XorImage.ToBase64JpegString())" title="PNGs are supported but not displayed" /></td>
+                    }
+                    <td>@description.SourceFileName</td>
+                    <td>@description.SourceIndex</td>
+                    <td>@description.Width</td>
+                    <td>@description.Height</td>
+                    <td>@description.BitCount</td>
+                    <td>@description.ColorCount</td>
+                    <td>@description.SizeInBytes</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    }
+    @foreach (Exception ex in _exceptions)
+    {
+        <p>@ex.ToString()</p>
+    }
 </div>
 
-@foreach (Exception ex in _exceptions)
-{
-    <div>@ex.ToString()</div>
-}
+<div id="saveIconButtonContainer">
+    @if (_entries.Count > 0)
+    {
+        <button class="btn btn-primary" onclick="@SaveFileCall">Save to .ico</button>
+    }
+</div>
+
 
 @functions {
-    static Index _instance;
+        static Index _instance;
 
-    List<IconEntry> _entries = new List<IconEntry>();
+        string _icoBase64 = string.Empty;
 
-    List<Exception> _exceptions = new List<Exception>();
+        List<IIconEntry> _entries = new List<IIconEntry>();
+
+        List<Exception> _exceptions = new List<Exception>();
+
+    string SaveFileCall => "saveFile('" + _icoBase64 + "')";
 
     [JSInvokable("AddFile")]
     public static void AddFile(string filename, string base64contents)
@@ -77,7 +93,8 @@ full text of the license.
         {
             using (MemoryStream stream = new MemoryStream(contents))
             {
-                _entries.AddRange(IconUtils.GetList(filename, stream));
+                Icon icon = new Icon(filename, stream);
+                _entries.AddRange(icon.Entries);
             }
             //System.out.println("on file " + i);
         }
@@ -85,7 +102,12 @@ full text of the license.
         {
             _exceptions.Add(e);
         }
-        _entries.Sort();
+        _entries = _entries.OrderBy(e => e.Description).ToList();
+        using (MemoryStream stream = new MemoryStream())
+        {
+            IconUtils.WriteToStream(_entries, stream);
+            _icoBase64 = Convert.ToBase64String(stream.GetBuffer());
+        }
         StateHasChanged();
     }
 

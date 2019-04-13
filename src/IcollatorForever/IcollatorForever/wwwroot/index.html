@@ -28,6 +28,11 @@ full text of the license.
             reader.readAsBinaryString(file);
         }
 
+        function saveFile(base64) {
+            var dataurl = "data:image/x-icon;base64," + base64;
+            var newWindow = window.open(dataurl, 'untitled.ico');
+        }
+
     </script>
 </head>
 <body>

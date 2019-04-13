@@ -66,7 +66,6 @@ app {
 
 th, td {
     padding: 12px;
-    border-top: 1px solid gray;
     border-bottom: 1px solid gray;
 }
 
@@ -74,9 +73,14 @@ th {
     background-color: #e6e6e6;
 }
 
+td {
+    border-top: 1px solid gray;
+}
+
 #inputContainer {
     flex: initial;
     padding-bottom: 1rem;
+    border-bottom: 1px solid gray;
 }
 
 #iconTableContainer {
@@ -85,8 +89,9 @@ th {
     overflow-y: auto;
 }
 
-#iconTableButtonContainer {
+#saveIconButtonContainer {
     flex: initial;
     padding-top: 1rem;
     padding-bottom: 1rem;
+    border-top: 1px solid gray;
 }

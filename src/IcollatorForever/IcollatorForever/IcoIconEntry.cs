@@ -2,121 +2,137 @@
 // See license.txt in the FileSharper distribution or repository for the
 // full text of the license.
 
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.IO;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace IcollatorForever
 {
-    public class IconEntry : IComparable<IconEntry>
+    public class IcoIconEntry : IIconEntry
     {
-        public string SourceFileName { get; }
-        public int SourceIndex { get; }
-        public int Width { get; private set; }
-        public int Height { get; }
+        private int _startOfXorImage;
+        private int _startOfAndImage;
+
+        private Image<Rgba32> _xorImage;
+        private Image<Rgba32> _andImage;
+
+        public IconEntryDescription Description { get; }
+
         public int IhHeight { get; private set; }
-        public int ColorCount { get; }
-        public byte Reserved { get; private set; }
-        public int Planes { get; private set; }
-        public int BitCount { get; private set; }
         public int IhCompression { get; private set; }
         public int IhImageSize { get; private set; }
         public int IhXpixelsPerM { get; private set; }
         public int IhYpixelsPerM { get; private set; }
         public int IhColorsUsed { get; private set; }
         public int IhColorsImportant { get; private set; }
-        public int SizeInBytes { get; private set; }
-        public int FileOffset { get; }
         public int HeaderSize { get; private set; }
         public byte[] Data { get; private set; }
-        public int[][] XorColors { get; private set; }
-        public int[][] AndColors { get; private set; }
-        public int[][] XorIndices { get; private set; }
-        public int[][] AndIndices { get; private set; }
-        public int[][][] XorRgba { get; private set; }
-        public Image<Rgba32> AndImage { get; private set; }
-        public Image<Rgba32> XorImage { get; private set; }
+        public bool IsPng { get; private set; }
+        public bool HasAndImage => !IsPng;
+        public bool HasXorImage => true;
 
-        public string XorPngString
+        public Image<Rgba32> XorImage
         {
             get
             {
-                using (MemoryStream stream = new MemoryStream())
+                if (_xorImage == null)
                 {
-                    XorImage.SaveAsPng<Rgba32>(stream);
-                    byte[] bytes = stream.GetBuffer();
-                    return Convert.ToBase64String(bytes);
+                    if (IsPng)
+                    {
+                        // temporary until the mono team fixes the DEFLATE bug so I can read PNGs
+                        _xorImage = new Image<Rgba32>(Description.Width, Description.Height);
+                    }
+                    else
+                    {
+                        _xorImage = GetImage(Data, _startOfXorImage, Description.Width, Description.Height, Description.BitCount, true);
+                    }
                 }
+                return _xorImage;
             }
         }
 
-        public string AndPngString
+        public Image<Rgba32> AndImage
         {
             get
             {
-                using (MemoryStream stream = new MemoryStream())
+                if (_andImage == null)
                 {
-                    AndImage.SaveAsPng<Rgba32>(stream);
-                    byte[] bytes = stream.GetBuffer();
-                    return Convert.ToBase64String(bytes);
+                    if (IsPng)
+                    {
+                        // temporary until the mono team fixes the DEFLATE bug so I can read PNGs
+                        _andImage = new Image<Rgba32>(Description.Width, Description.Height);
+                    }
+                    else
+                    {
+                        _andImage = GetImage(Data, _startOfAndImage, Description.Width, Description.Height, 1, false);
+                    }
                 }
+                return _andImage;
             }
         }
 
-        public string XorJpegString
+        public IcoIconEntry(IconEntryDescription description, Stream stream)
         {
-            get
+            Description = description;
+            if (stream.CanSeek)
             {
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    XorImage.SaveAsJpeg<Rgba32>(stream);
-                    byte[] bytes = stream.GetBuffer();
-                    return Convert.ToBase64String(bytes);
-                }
+                stream.Seek(Description.FileOffset, SeekOrigin.Begin);
             }
-        }
-
-        public string AndJpegString
-        {
-            get
-            {
-                using (MemoryStream stream = new MemoryStream())
+            byte[] data = new byte[Description.SizeInBytes];
+            int totalBytesRead = 0;
+            int bytesRead = 0;
+            while ((bytesRead = stream.Read(data, totalBytesRead, data.Length - totalBytesRead)) > 0)
                 {
-                    AndImage.SaveAsJpeg<Rgba32>(stream);
-                    byte[] bytes = stream.GetBuffer();
-                    return Convert.ToBase64String(bytes);
-                }
+                totalBytesRead += bytesRead;
             }
-        }
-
-        public IconEntry(int width, int height, int colorCount,
-        byte reservedByte, int planes, int bitCount,
-        int sizeInBytes, int fileOffset, string sourceFileName,
-        int indexInSourceFile)
-        {
-            Width = width;
-            Height = height;
-            ColorCount = colorCount;
-            SizeInBytes = sizeInBytes;
-            FileOffset = fileOffset;
-            SourceFileName = sourceFileName;
-            SourceIndex = indexInSourceFile;
+            SetData(data);
         }
 
         public void SetData(byte[] value)
         {
             Data = value;
-            ReadHeader(Data);
-            XorImage = GetImage(Data, 40, Width, Height,
-                BitCount, true);
-            int xorColorTableEntries = 0;
-            if (BitCount <= 8)
+            IsPng = true;
+            if (Data.Length > 8)
             {
-                xorColorTableEntries = 1 << BitCount;
+                // PNG signature (first 8 bytes of all PNG files)
+                byte[] sig = { 137, 80, 78, 71, 13, 10, 26, 10 };
+                for (int i = 0; i < 8; i++)
+                {
+                    if (Data[i] != sig[i])
+                    {
+                        IsPng = false;
+                        break;
+                    }
+                }
             }
-            int bitsInRow = Width * BitCount;
-            // rows are always a multiple of 32 bytes long
+            if (IsPng)
+            {
+                ReadPng();
+            }
+            else
+            {
+                ReadBmp();
+            }
+        }
+
+        public void ReadPng()
+        {
+            // temporary until the mono team fixes the DEFLATE bug so I can read PNGs
+        }
+
+        public void ReadBmp()
+        {
+            ReadHeader(Data);
+            _startOfXorImage = 40;
+
+            int xorColorTableEntries = 0;
+            if (Description.BitCount <= 8)
+            {
+                xorColorTableEntries = 1 << Description.BitCount;
+            }
+            int bitsInRow = Description.Width * Description.BitCount;
+            // rows are always a multiple of 32 bits long
             // (padded with 0's if necessary)
             int remainder = bitsInRow % 32;
             if (remainder > 0)
@@ -124,24 +140,23 @@ namespace IcollatorForever
                 bitsInRow += (32 - remainder);
             }
 
-            int xorByteCount = Height * bitsInRow / 8;
-            int startOfAndImage = 40 + xorColorTableEntries * 4 + xorByteCount;
-            AndImage = GetImage(Data, startOfAndImage,
-                Width, Height, 1, false);
-            int bitsInAndRow = Width;
+            int xorByteCount = Description.Height * bitsInRow / 8;
+            _startOfAndImage = 40 + xorColorTableEntries * 4 + xorByteCount;
+            
+            int bitsInAndRow = Description.Width;
             int andRemainder = bitsInAndRow % 32;
             if (andRemainder > 0)
             {
                 bitsInAndRow += 32 - andRemainder;
             }
-            int andByteCount = Height * bitsInAndRow / 8;
-            int calculatedSizeInBytes = startOfAndImage + andByteCount;
-            if (calculatedSizeInBytes != SizeInBytes)
+            int andByteCount = Description.Height * bitsInAndRow / 8;
+            int calculatedSizeInBytes = _startOfAndImage + andByteCount;
+            if (calculatedSizeInBytes != Description.SizeInBytes)
             {
                 //System.err.println("Calculated Size in Bytes: " + calculatedSizeInBytes);
                 //System.err.println("Supposed Size in Bytes: " + SizeInBytes);
             }
-            SizeInBytes = calculatedSizeInBytes;
+            Description.OverwriteSizeInBytes(calculatedSizeInBytes);
             byte[] correctedData = new byte[calculatedSizeInBytes];
             for (int i = 0; i < correctedData.Length; i++)
             {
@@ -176,13 +191,13 @@ namespace IcollatorForever
             {
                 try
                 {
-                    HeaderSize = IconUtils.ReadInt(s, 4);
+                    HeaderSize = s.ReadInt(4);
                     Console.WriteLine("headerSize = " + HeaderSize);
-                    Width = IconUtils.ReadInt(s, 4);
-                    Console.WriteLine("width = " + Width);
-                    IhHeight = IconUtils.ReadInt(s, 4);
+                    Description.OverwriteWidth(s.ReadInt(4));
+                    Console.WriteLine("width = " + Description.Width);
+                    IhHeight = s.ReadInt(4);
                     Console.WriteLine("ihHeight = " + IhHeight);
-                    if (IhHeight == Height)
+                    if (IhHeight == Description.Height)
                     {
                         // this is an indication that the developer of the software
                         // that wrote this file (e.g. GraphicConverter) incorrectly
@@ -190,7 +205,7 @@ namespace IcollatorForever
                         // the height of the icon rather than the combined height of
                         // the XOR and AND images that make up the icon.  We need to fix
                         // this in the data lest we write out equally incorrect data.
-                        IhHeight = Height * 2;
+                        IhHeight = Description.Height * 2;
                         byte[] replacementBytes = IconUtils.GetBytes(IhHeight, 4);
                         for (int i = 0; i < 4; i++)
                         {
@@ -198,24 +213,24 @@ namespace IcollatorForever
                         }
                         Console.WriteLine("ihHeight fixed: " + IhHeight);
                     }
-                    Planes = IconUtils.ReadInt(s, 2);
-                    Console.WriteLine("planes = " + Planes);
-                    BitCount = IconUtils.ReadInt(s, 2);
-                    Console.WriteLine("bitCount = " + BitCount);
-                    IhCompression = IconUtils.ReadInt(s, 4);
+                    Description.OverwritePlanes(s.ReadInt(2));
+                    Console.WriteLine("planes = " + Description.Planes);
+                    Description.OverwriteBitCount(s.ReadInt(2));
+                    Console.WriteLine("bitCount = " + Description.BitCount);
+                    IhCompression = s.ReadInt(4);
                     Console.WriteLine("ihCompression = " + IhCompression);
-                    IhImageSize = IconUtils.ReadInt(s, 4);
+                    IhImageSize = s.ReadInt(4);
                     Console.WriteLine("ihImageSize = " + IhImageSize);
-                    IhXpixelsPerM = IconUtils.ReadInt(s, 4);
+                    IhXpixelsPerM = s.ReadInt(4);
                     Console.WriteLine("ihXpixelsPerM = " + IhXpixelsPerM);
-                    IhYpixelsPerM = IconUtils.ReadInt(s, 4);
+                    IhYpixelsPerM = s.ReadInt(4);
                     Console.WriteLine("ihYpixelsPerM = " + IhYpixelsPerM);
-                    IhColorsUsed = IconUtils.ReadInt(s, 4);
+                    IhColorsUsed = s.ReadInt(4);
                     Console.WriteLine("ihColorsUsed = " + IhColorsUsed);
-                    IhColorsImportant = IconUtils.ReadInt(s, 4);
+                    IhColorsImportant = s.ReadInt(4);
                     Console.WriteLine("ihColorsImportant = " + IhColorsImportant);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     //System.err.println("Error reading InfoHeader: ");
                     //e.printStackTrace(System.err);
@@ -267,7 +282,7 @@ namespace IcollatorForever
                     }
 
                     int bitsInRow = imWidth * imBitCount;
-                    // rows are always a multiple of 32 bytes long
+                    // rows are always a multiple of 32 bits long
                     // (padded with 0's if necessary)
                     int remainder = bitsInRow % 32;
                     if (remainder > 0)
@@ -275,10 +290,7 @@ namespace IcollatorForever
                         bitsInRow += (32 - remainder);
                     }
                     byte[] rowBytes = new byte[bitsInRow / 8];
-                    if (!hasColorTable)
-                    {
-                        //                    Console.WriteLine("beginning and image");
-                    }
+
                     for (int i = 0; i < imHeight; i++)
                     {
                         s.Read(rowBytes, 0, rowBytes.Length);
@@ -287,8 +299,7 @@ namespace IcollatorForever
                         for (int j = 0; j < imWidth; j++)
                         {
                             int pixel = pixels[j];
-                            //                        Console.WriteLine("pixel " + j + "," + (imHeight - 1 - i)
-                            //                            + " has index " + pixels[j]);
+
                             im[j, imHeight - i - 1] = new Rgba32(reds[pixel], greens[pixel], blues[pixel]);
                         }
                     }
@@ -303,9 +314,6 @@ namespace IcollatorForever
                             byte blue = data[imOffset + 3 * (imWidth * i + j)];
                             byte green = data[imOffset + 3 * (imWidth * i + j) + 1];
                             byte red = data[imOffset + 3 * (imWidth * i + j) + 2];
-                            //                        Console.WriteLine("Color " + i + "[" + (red & 255)
-                            //                        + "," + (green & 255) + ","
-                            //                        + (blue & 255) + "," + (alpha & 255) + "]" );
 
                             im[j, imHeight - i - 1] = new Rgba32(red, green, blue);
                         }
@@ -328,9 +336,6 @@ namespace IcollatorForever
                             {
                                 hasAlphaChannel = true;
                             }
-                            //                        Console.WriteLine("Color " + i + "[" + (red & 255)
-                            //                        + "," + (green & 255) + ","
-                            //                        + (blue & 255) + "," + (alpha & 255) + "]" );
 
                             im[j, imHeight - i - 1] = new Rgba32(red, green, blue, alpha);
                         }
@@ -357,31 +362,9 @@ namespace IcollatorForever
 
         }
 
-        public int CompareTo(IconEntry other)
+        public void Write(Stream s)
         {
-            if (this.Width > other.Width)
-            {
-                return 1;
-            }
-            else if (this.Width < other.Width)
-            {
-                return -1;
-            }
-            else
-            {
-                if (this.BitCount < other.BitCount)
-                {
-                    return 1;
-                }
-                else if (this.BitCount > other.BitCount)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
+            s.Write(Data, 0, Data.Length);
         }
 
     }
