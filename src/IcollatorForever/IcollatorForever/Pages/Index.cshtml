@@ -95,10 +95,10 @@ full text of the license.
         _instance.ClearEntries();
     }
 
-    [JSInvokable("Delete")]
-    public static void Delete(int index)
+    [JSInvokable("DeleteSelected")]
+    public static void DeleteSelected()
     {
-        _instance.RemoveEntry(index);
+        _instance.DeleteSelectedEntry();
     }
 
     [JSInvokable("Select")]
@@ -140,18 +140,14 @@ full text of the license.
         StateHasChanged();
     }
 
-    private void RemoveEntry(int index)
+    private void DeleteSelectedEntry()
     {
-        if (index > -1 && index < _entries.Count)
+        if (_selectedEntry != null)
         {
-            IIconEntry entry = _entries[index];
-            _entries.RemoveAt(index);
-            if (_selectedEntry == entry)
-            {
-                _selectedEntry = null;
-            }
+            _entries.Remove(_selectedEntry);
+            _selectedEntry = null;
+            StateHasChanged();
         }
-        StateHasChanged();
     }
 
     private void SelectEntry(int index)
