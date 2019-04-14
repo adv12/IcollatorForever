@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿// Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+// See license.txt in the IcollatorForever distribution or repository for the
+// full text of the license.
+
+using System;
 
 namespace IcollatorForever
 {

@@ -1,5 +1,5 @@
 ﻿// Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
-// See license.txt in the FileSharper distribution or repository for the
+// See license.txt in the IcollatorForever distribution or repository for the
 // full text of the license.
 
 using System;
@@ -365,6 +365,21 @@ namespace IcollatorForever
         public void Write(Stream s)
         {
             s.Write(Data, 0, Data.Length);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+            IcoIconEntry that = (IcoIconEntry)obj;
+            return this.Description.Equals(that.Description);
+        }
+
+        public override int GetHashCode()
+        {
+            return Description.GetHashCode();
         }
 
     }

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+// See license.txt in the IcollatorForever distribution or repository for the
+// full text of the license.
+
+using System;
 using System.IO;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

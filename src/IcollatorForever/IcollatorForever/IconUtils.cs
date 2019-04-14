@@ -1,5 +1,5 @@
 ﻿// Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
-// See license.txt in the FileSharper distribution or repository for the
+// See license.txt in the IcollatorForever distribution or repository for the
 // full text of the license.
 
 using System.Collections.Generic;

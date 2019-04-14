@@ -1,6 +1,6 @@
 ﻿<!--
 Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
-See license.txt in the FileSharper distribution or repository for the
+See license.txt in the IcollatorForever distribution or repository for the
 full text of the license.
 -->
 
@@ -8,8 +8,11 @@ full text of the license.
 
 <div id="inputContainer">
     <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon" multiple /></div>
-    <div>
+    <div class="topButtons">
         <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
+        <button id="clearButton" class="btn btn-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
+        <button id="deleteButton" class="btn btn-primary" onclick="deleteSelected()" disabled=@NoSelection>Delete Selected</button>
+        <button id="saveButton" class="btn btn-primary" onclick="@SaveFileCall" disabled=@NoEntries>Save to .ico</button>
     </div>
 </div>
 <div id="iconTableContainer">
@@ -30,27 +33,29 @@ full text of the license.
                 </tr>
             </thead>
             <tbody>
-                @foreach (IIconEntry entry in _entries)
+                @for (int i = 0; i < _entries.Count; i++)
                 {
+                    IIconEntry entry = _entries[i];
+                    string onclick = $"select({i})";
                     IconEntryDescription description = entry.Description;
-                <tr>
-                    @if (entry.HasAndImage)
-                    {
-                        <td><img src="data:image/jpeg;base64,@(entry.XorImage.ToBase64JpegString())" /></td>
-                        <td><img src="data:image/jpeg;base64,@(entry.AndImage.ToBase64JpegString())" /></td>
-                    }
-                    else
-                    {
-                        <td colspan="2"><img src="data:image/jpeg;base64,@(entry.XorImage.ToBase64JpegString())" title="PNGs are supported but not displayed" /></td>
-                    }
-                    <td>@description.SourceFileName</td>
-                    <td>@description.SourceIndex</td>
-                    <td>@description.Width</td>
-                    <td>@description.Height</td>
-                    <td>@description.BitCount</td>
-                    <td>@description.ColorCount</td>
-                    <td>@description.SizeInBytes</td>
-                </tr>
+                    <tr onclick="@onclick" class="@(entry == _selectedEntry ? "selected" : "")">
+                        @if (entry.HasAndImage)
+                        {
+                            <td><img src="data:image/jpeg;base64,@(entry.XorImage.ToBase64JpegString())" /></td>
+                            <td><img src="data:image/jpeg;base64,@(entry.AndImage.ToBase64JpegString())" /></td>
+                        }
+                        else
+                        {
+                            <td colspan="2"><img src="data:image/jpeg;base64,@(entry.XorImage.ToBase64JpegString())" title="PNGs are supported but not displayed" /></td>
+                        }
+                        <td>@description.SourceFileName</td>
+                        <td>@description.SourceIndex</td>
+                        <td>@description.Width</td>
+                        <td>@description.Height</td>
+                        <td>@description.BitCount</td>
+                        <td>@description.ColorCount</td>
+                        <td>@description.SizeInBytes</td>
+                    </tr>
                 }
             </tbody>
         </table>
@@ -61,29 +66,45 @@ full text of the license.
     }
 </div>
 
-<div id="saveIconButtonContainer">
-    @if (_entries.Count > 0)
-    {
-        <button class="btn btn-primary" onclick="@SaveFileCall">Save to .ico</button>
-    }
-</div>
-
-
 @functions {
         static Index _instance;
 
         string _icoBase64 = string.Empty;
 
+        IIconEntry _selectedEntry;
+
+        bool NoEntries => _entries.Count == 0;
+
+        bool NoSelection => _selectedEntry == null;
+
         List<IIconEntry> _entries = new List<IIconEntry>();
 
         List<Exception> _exceptions = new List<Exception>();
 
-    string SaveFileCall => "saveFile('" + _icoBase64 + "')";
+        string SaveFileCall => "saveFile('" + _icoBase64 + "')";
 
     [JSInvokable("AddFile")]
     public static void AddFile(string filename, string base64contents)
     {
         _instance.TryAddFile(filename, base64contents);
+    }
+
+    [JSInvokable("Clear")]
+    public static void Clear()
+    {
+        _instance.ClearEntries();
+    }
+
+    [JSInvokable("Delete")]
+    public static void Delete(int index)
+    {
+        _instance.RemoveEntry(index);
+    }
+
+    [JSInvokable("Select")]
+    public static void Select(int index)
+    {
+        _instance.SelectEntry(index);
     }
 
     private void TryAddFile(string filename, string base64contents)
@@ -107,6 +128,45 @@ full text of the license.
         {
             IconUtils.WriteToStream(_entries, stream);
             _icoBase64 = Convert.ToBase64String(stream.GetBuffer());
+        }
+
+        StateHasChanged();
+    }
+
+    private void ClearEntries()
+    {
+        _entries.Clear();
+        _selectedEntry = null;
+        StateHasChanged();
+    }
+
+    private void RemoveEntry(int index)
+    {
+        if (index > -1 && index < _entries.Count)
+        {
+            IIconEntry entry = _entries[index];
+            _entries.RemoveAt(index);
+            if (_selectedEntry == entry)
+            {
+                _selectedEntry = null;
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void SelectEntry(int index)
+    {
+        if (index > -1 && index < _entries.Count)
+        {
+            IIconEntry entry = _entries[index];
+            if (entry == _selectedEntry)
+            {
+                _selectedEntry = null;
+            }
+            else
+            {
+                _selectedEntry = entry;
+            }
         }
         StateHasChanged();
     }
