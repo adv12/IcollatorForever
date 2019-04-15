@@ -12,11 +12,14 @@ namespace IcollatorForever
     {
         IconEntryDescription Description { get; }
 
-        bool HasAndImage { get; }
         bool HasXorImage { get; }
+        bool HasAndImage { get; }
 
-        Image<Rgba32> AndImage { get; }
         Image<Rgba32> XorImage { get; }
+        Image<Rgba32> AndImage { get; }
+
+        string XorDataUrl { get; }
+        string AndDataUrl { get; }
 
         void Write(Stream s);
     }

@@ -12,7 +12,7 @@ full text of the license.
         <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
         <button id="clearButton" class="btn btn-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
         <button id="deleteButton" class="btn btn-primary" onclick="deleteSelected()" disabled=@NoSelection>Delete Selected</button>
-        <button id="saveButton" class="btn btn-primary" onclick="@SaveFileCall" disabled=@NoEntries>Save to .ico</button>
+        <button id="saveButton" class="btn btn-primary" onclick="saveFile()" disabled=@NoEntries>Save to .ico</button>
     </div>
 </div>
 <div id="iconTableContainer">
@@ -41,12 +41,12 @@ full text of the license.
                     <tr onclick="@onclick" class="@(entry == _selectedEntry ? "selected" : "")">
                         @if (entry.HasAndImage)
                         {
-                            <td><img src="data:image/jpeg;base64,@(entry.XorImage.ToBase64JpegString())" /></td>
-                            <td><img src="data:image/jpeg;base64,@(entry.AndImage.ToBase64JpegString())" /></td>
+                            <td><img src="@entry.XorDataUrl" /></td>
+                            <td><img src="@entry.AndDataUrl" /></td>
                         }
                         else
                         {
-                            <td colspan="2"><img src="data:image/jpeg;base64,@(entry.XorImage.ToBase64JpegString())" title="PNGs are supported but not displayed" /></td>
+                            <td colspan="2"><img src="@entry.XorDataUrl" title="PNGs are supported but not displayed" /></td>
                         }
                         <td>@description.SourceFileName</td>
                         <td>@description.SourceIndex</td>
@@ -81,7 +81,6 @@ full text of the license.
 
         List<Exception> _exceptions = new List<Exception>();
 
-        string SaveFileCall => "saveFile('" + _icoBase64 + "')";
 
     [JSInvokable("AddFile")]
     public static void AddFile(string filename, string base64contents)
@@ -107,6 +106,12 @@ full text of the license.
         _instance.SelectEntry(index);
     }
 
+    [JSInvokable("GenerateIcoDataUrl")]
+    public static string GenerateIcoDataUrl()
+    {
+        return _instance.GenerateIco();
+    }
+
     private void TryAddFile(string filename, string base64contents)
     {
         byte[] contents = Convert.FromBase64String(base64contents);
@@ -124,13 +129,23 @@ full text of the license.
             _exceptions.Add(e);
         }
         _entries = _entries.OrderBy(e => e.Description).ToList();
-        using (MemoryStream stream = new MemoryStream())
-        {
-            IconUtils.WriteToStream(_entries, stream);
-            _icoBase64 = Convert.ToBase64String(stream.GetBuffer());
-        }
 
         StateHasChanged();
+    }
+
+    private string GenerateIco()
+    {
+        string url = "";
+        if (_entries.Count > 0)
+        {
+            url = "data:image/x-icon;base64,";
+            using (MemoryStream stream = new MemoryStream())
+            {
+                IconUtils.WriteToStream(_entries, stream);
+                url += Convert.ToBase64String(stream.GetBuffer());
+            }
+        }
+        return url;
     }
 
     private void ClearEntries()

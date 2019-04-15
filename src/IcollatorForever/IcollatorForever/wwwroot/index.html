@@ -28,11 +28,6 @@ full text of the license.
             reader.readAsBinaryString(file);
         }
 
-        function saveFile(base64) {
-            var dataurl = "data:image/x-icon;base64," + base64;
-            var newWindow = window.open(dataurl, 'untitled.ico');
-        }
-
         function clearTable() {
             var yes = confirm('Clear the table and start over?');
             if (yes) {
@@ -46,6 +41,11 @@ full text of the license.
 
         function deleteSelected() {
             DotNet.invokeMethod('IcollatorForever', 'DeleteSelected');
+        }
+
+        function saveFile() {
+            var url = DotNet.invokeMethod('IcollatorForever', 'GenerateIcoDataUrl');
+            window.open(url, 'untitled.ico');
         }
 
     </script>

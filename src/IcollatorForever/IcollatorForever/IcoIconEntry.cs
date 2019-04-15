@@ -17,6 +17,9 @@ namespace IcollatorForever
         private Image<Rgba32> _xorImage;
         private Image<Rgba32> _andImage;
 
+        private string _xorDataUrl;
+        private string _andDataUrl;
+
         public IconEntryDescription Description { get; }
 
         public int IhHeight { get; private set; }
@@ -60,8 +63,7 @@ namespace IcollatorForever
                 {
                     if (IsPng)
                     {
-                        // temporary until the mono team fixes the DEFLATE bug so I can read PNGs
-                        _andImage = new Image<Rgba32>(Description.Width, Description.Height);
+                        return null;
                     }
                     else
                     {
@@ -69,6 +71,37 @@ namespace IcollatorForever
                     }
                 }
                 return _andImage;
+            }
+        }
+
+        public string XorDataUrl
+        {
+            get
+            {
+                if (_xorDataUrl == null)
+                {
+                    if (Description.BitCount <= 8)
+                    {
+                        _xorDataUrl = "data:image/gif;base64," + XorImage.ToBase64GifString();
+                    }
+                    else
+                    {
+                        _xorDataUrl = "data:image/jpeg;base64," + XorImage.ToBase64JpegString();
+                    }
+                }
+                return _xorDataUrl;
+            }
+        }
+
+        public string AndDataUrl
+        {
+            get
+            {
+                if (_andDataUrl == null)
+                {
+                    _andDataUrl = "data:image/gif;base64," + AndImage.ToBase64GifString();
+                }
+                return _andDataUrl;
             }
         }
 

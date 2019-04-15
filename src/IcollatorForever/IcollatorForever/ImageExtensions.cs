@@ -15,7 +15,7 @@ namespace IcollatorForever
         {
             using (MemoryStream stream = new MemoryStream())
             {
-                image.SaveAsJpeg<Rgba32>(stream);
+                image.SaveAsJpeg(stream);
                 byte[] bytes = stream.GetBuffer();
                 return Convert.ToBase64String(bytes);
             }
@@ -25,7 +25,17 @@ namespace IcollatorForever
         {
             using (MemoryStream stream = new MemoryStream())
             {
-                image.SaveAsPng<Rgba32>(stream);
+                image.SaveAsPng(stream);
+                byte[] bytes = stream.GetBuffer();
+                return Convert.ToBase64String(bytes);
+            }
+        }
+
+        public static string ToBase64GifString(this Image<Rgba32> image)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                image.SaveAsGif(stream);
                 byte[] bytes = stream.GetBuffer();
                 return Convert.ToBase64String(bytes);
             }
