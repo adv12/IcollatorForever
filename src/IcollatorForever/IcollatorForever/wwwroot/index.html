@@ -43,9 +43,34 @@ full text of the license.
             DotNet.invokeMethod('IcollatorForever', 'DeleteSelected');
         }
 
+        // https://stackoverflow.com/questions/13405129/javascript-create-and-save-file
+        function download(data, filename, type) {
+            var file = new Blob([data], {type: type});
+            if (window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(file, filename);
+            else { // Others
+                var a = document.createElement("a"),
+                        url = URL.createObjectURL(file);
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);  
+                }, 0); 
+            }
+        }
+
         function saveFile() {
-            var url = DotNet.invokeMethod('IcollatorForever', 'GenerateIcoDataUrl');
-            window.open(url, 'untitled.ico');
+            var base64 = DotNet.invokeMethod('IcollatorForever', 'GenerateBase64IcoString');
+            var byteChars = atob(base64);
+            const byteNumbers = new Array(byteChars.length);
+            for (let i = 0; i < byteChars.length; i++) {
+                byteNumbers[i] = byteChars.charCodeAt(i);
+            }
+            const bytes = new Uint8Array(byteNumbers);
+            download(bytes, "icon.ico", "image/x-icon");
         }
 
     </script>
@@ -70,7 +95,6 @@ full text of the license.
                     }
                     parent.appendChild(newInput);
                 }
-
             }
         }, 1000);
     </script>

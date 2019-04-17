@@ -67,19 +67,17 @@ full text of the license.
 </div>
 
 @functions {
-        static Index _instance;
+    static Index _instance;
 
-        string _icoBase64 = string.Empty;
+    IIconEntry _selectedEntry;
 
-        IIconEntry _selectedEntry;
+    bool NoEntries => _entries.Count == 0;
 
-        bool NoEntries => _entries.Count == 0;
+    bool NoSelection => _selectedEntry == null;
 
-        bool NoSelection => _selectedEntry == null;
+    List<IIconEntry> _entries = new List<IIconEntry>();
 
-        List<IIconEntry> _entries = new List<IIconEntry>();
-
-        List<Exception> _exceptions = new List<Exception>();
+    List<Exception> _exceptions = new List<Exception>();
 
 
     [JSInvokable("AddFile")]
@@ -106,10 +104,10 @@ full text of the license.
         _instance.SelectEntry(index);
     }
 
-    [JSInvokable("GenerateIcoDataUrl")]
-    public static string GenerateIcoDataUrl()
+    [JSInvokable("GenerateBase64IcoString")]
+    public static string GenerateBase64IcoString()
     {
-        return _instance.GenerateIco();
+        return _instance.GenerateBase64Ico();
     }
 
     private void TryAddFile(string filename, string base64contents)
@@ -133,19 +131,17 @@ full text of the license.
         StateHasChanged();
     }
 
-    private string GenerateIco()
+    private string GenerateBase64Ico()
     {
-        string url = "";
         if (_entries.Count > 0)
         {
-            url = "data:image/x-icon;base64,";
             using (MemoryStream stream = new MemoryStream())
             {
                 IconUtils.WriteToStream(_entries, stream);
-                url += Convert.ToBase64String(stream.GetBuffer());
+                return Convert.ToBase64String(stream.GetBuffer());
             }
         }
-        return url;
+        return null;
     }
 
     private void ClearEntries()
