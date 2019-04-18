@@ -84,10 +84,6 @@ td {
     border-top: 1px solid #d6d6d6;
 }
 
-td:last-child {
-    border-bottom: none;
-}
-
 #inputContainer {
     flex: initial;
 }
