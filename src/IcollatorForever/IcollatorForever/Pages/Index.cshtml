@@ -11,7 +11,6 @@ full text of the license.
     <div class="topButtons">
         <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
         <button id="clearButton" class="btn btn-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
-        <button id="deleteButton" class="btn btn-primary" onclick="deleteSelected()" disabled=@NoSelection>Delete Selected</button>
         <button id="saveButton" class="btn btn-primary" onclick="saveFile()" disabled=@NoEntries>Save to .ico</button>
     </div>
 </div>
@@ -64,6 +63,9 @@ full text of the license.
     {
         <p>@ex.ToString()</p>
     }
+</div>
+<div id="selectedEntryActions" class='bottomButtons @(NoSelection ? "" : "entrySelected")'>
+    <button id="deleteButton" class="btn btn-primary" onclick="deleteSelected()" disabled=@NoSelection>Delete</button>
 </div>
 
 @functions {
@@ -173,6 +175,7 @@ full text of the license.
             else
             {
                 _selectedEntry = entry;
+
             }
         }
         StateHasChanged();

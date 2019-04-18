@@ -73,8 +73,7 @@ tr.selected {
 
 th, td {
     padding: 12px;
-    border-top: 1px solid gray;
-    border-bottom: 1px solid gray;
+    border-bottom: 1px solid #d6d6d6;
 }
 
 th {
@@ -82,12 +81,15 @@ th {
 }
 
 td {
-    border-top: 1px solid gray;
+    border-top: 1px solid #d6d6d6;
+}
+
+td:last-child {
+    border-bottom: none;
 }
 
 #inputContainer {
     flex: initial;
-    /*border-bottom: 1px solid gray;*/
 }
 
 #iconTableContainer {
@@ -95,6 +97,20 @@ td {
     display: block;
     overflow-y: auto;
 }
+
+#selectedEntryActions {
+    display: none;
+    height: 0;
+    transition: height 1s;
+}
+
+    #selectedEntryActions.entrySelected {
+        flex: initial;
+        display: flex;
+        flex-direction: row;
+        height: auto;
+        transition: height 1s;
+    }
 
 .topButtons, .bottomButtons {
     display: flex;
@@ -104,7 +120,15 @@ td {
     padding: 8px;
 }
 
-.topButtons .btn, .bottomButton .btn {
+.topButtons {
+    border-bottom: 1px solid #d6d6d6;
+}
+
+.bottomButtons {
+    border-top: 1px solid #d6d6d6;
+}
+
+.topButtons .btn, .bottomButtons .btn {
     margin: 8px;
 }
 
