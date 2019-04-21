@@ -1,10 +1,10 @@
-﻿<!--
+﻿@page "/"
+
+<!--
 Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
 See license.txt in the IcollatorForever distribution or repository for the
 full text of the license.
 -->
-
-@page "/"
 
 <div id="inputContainer">
     <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon" multiple /></div>
@@ -14,7 +14,12 @@ full text of the license.
         <button id="saveButton" class="btn btn-primary" onclick="saveFile()" disabled=@NoEntries>Save to .ico</button>
     </div>
 </div>
-<div id="iconTableContainer">
+<div id="iconTableContainer" ondrop="return handleDrop(event);" ondragover="return handleDragOver(event);"
+     ondragenter="return handleDragEnter(event);" ondragleave="return handleDragLeave(event);">
+    @if (_entries.Count == 0)
+    {
+        <div id="dropTarget">Drag and drop files here to add them to your icon.</div>
+    }
     @if (_entries.Count > 0)
     {
         <table>

@@ -64,6 +64,7 @@ table {
     margin-left: 16px;
     margin-right: 16px;
     border-collapse: collapse;
+    pointer-events: none; /* don't report a dragleave on the parent */
 }
 
 tr.selected {
@@ -90,8 +91,23 @@ td {
 
 #iconTableContainer {
     flex: auto;
-    display: block;
+    display: flex;
+    flex-direction: row;
     overflow-y: auto;
+}
+
+    #iconTableContainer.over {
+        background-color: #e6e6e6;
+    }
+
+#dropTarget {
+    flex: initial;
+    align-self: center;
+    align-content: center;
+    padding: 16px;
+    margin: auto;
+    color: #999;
+    pointer-events: none; /* don't report a dragleave on the parent */
 }
 
 #selectedEntryActions {

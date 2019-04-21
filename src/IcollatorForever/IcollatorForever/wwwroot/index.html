@@ -73,6 +73,76 @@ full text of the license.
             download(bytes, "icon.ico", "image/x-icon");
         }
 
+        function handleDrop(e) {
+            preventDefault(e);
+            stopPropagation(e); // don't redirect
+            
+            e.target.classList.remove('over');
+
+            var files = [];
+            var items = e.dataTransfer.items;
+            if (items) {
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].kind === 'file') {
+                        files.push(items[i].getAsFile());
+                    }
+                }
+            } else {
+                files = e.dataTransfer.files;
+            }
+
+            loadFiles(files);
+            return false;
+        }
+
+        function handleDragOver(e) {
+            preventDefault(e);
+            e.dataTransfer.dropEffect = 'link';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+
+            // Prevent default behavior (Prevent file from being opened)
+            e.preventDefault();
+
+            var hasFiles = false;
+
+            if (e.dataTransfer.items) {
+                for (var i = 0; i < e.dataTransfer.items.length; i++) {
+                    if (e.dataTransfer.items[i].kind === 'file') {
+                        hasFiles = true;
+                        break;
+                    }
+                }
+            } else {
+                hasFiles = e.dataTransfer.files.length > 0;
+            }
+
+            preventDefault(e);
+            e.dataTransfer.dropEffect = 'link';
+            e.target.classList.add('over');
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            preventDefault(e);
+            e.target.classList.remove('over');
+            return false;
+        }
+
+        function preventDefault(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+        }
+
+        function stopPropagation(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+        }
+
     </script>
 </head>
 <body>
@@ -98,6 +168,6 @@ full text of the license.
             }
         }, 1000);
     </script>
-    <script src="_framework/components.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 </html>
