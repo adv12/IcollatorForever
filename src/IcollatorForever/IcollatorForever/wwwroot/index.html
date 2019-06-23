@@ -96,6 +96,7 @@ full text of the license.
             
             e.target.classList.remove('over');
 
+            _loading = true;
             var files = [];
             var items = e.dataTransfer.items;
             if (items) {
@@ -108,6 +109,7 @@ full text of the license.
                 files = e.dataTransfer.files;
             }
             await loadFiles(files);
+            _loading = false;
             return false;
         }
 
@@ -176,7 +178,6 @@ full text of the license.
                     _loading = true;
                     await loadFiles(files);
                     _loading = false;
-                    alert('Loaded files from file input!');
                     var newInput = document.createElement("input");
                     var names = input.getAttributeNames();
                     for (var i = 0; i < names.length; i++) {
