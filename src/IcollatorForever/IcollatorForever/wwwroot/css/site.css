@@ -64,7 +64,6 @@ table {
     margin-left: 16px;
     margin-right: 16px;
     border-collapse: collapse;
-    pointer-events: none; /* don't report a dragleave on the parent */
 }
 
 tr.selected {
@@ -98,6 +97,10 @@ td {
 
     #iconTableContainer.over {
         background-color: #e6e6e6;
+    }
+
+    #iconTableContainer.over * {
+        pointer-events: none;
     }
 
 #dropTarget {

@@ -14,18 +14,34 @@ full text of the license.
     <link href="css/site.css" rel="stylesheet" />
     <script type="text/javascript">
 
-        function loadFiles(files) {
+        var _loading = false;
+
+        async function loadFiles(files) {
             for (var i = 0; i < files.length; i++) {
-                addIconFile(files[i]);
+                await addIconFile(files[i]);
+                console.log("finished awaiting addIconFile");
             }
+            console.log("returning from loadFiles");
         }
 
-        function addIconFile(file) {
-            var reader = new FileReader();
-            reader.onload = function () {
-                DotNet.invokeMethod('IcollatorForever', 'AddFile', file.name, btoa(reader.result));
-            }
-            reader.readAsBinaryString(file);
+        function readFileAsync(file) {
+            return new Promise((resolve, reject) => {
+                var reader = new FileReader();
+
+                reader.onload = () => {
+                    resolve(reader.result);
+                };
+
+                reader.onerror = reject;
+
+                reader.readAsBinaryString(file);
+            });
+        }
+
+        async function addIconFile(file) {
+            var bytes = await readFileAsync(file);
+            await DotNet.invokeMethod('IcollatorForever', 'AddFile', file.name, btoa(bytes));
+            console.log('successfully added icon file');
         }
 
         function clearTable() {
@@ -36,6 +52,7 @@ full text of the license.
         }
 
         function select(index) {
+            console.log("about to call Select");
             DotNet.invokeMethod('IcollatorForever', 'Select', index);
         }
 
@@ -73,7 +90,7 @@ full text of the license.
             download(bytes, "icon.ico", "image/x-icon");
         }
 
-        function handleDrop(e) {
+        async function handleDrop(e) {
             preventDefault(e);
             stopPropagation(e); // don't redirect
             
@@ -90,8 +107,7 @@ full text of the license.
             } else {
                 files = e.dataTransfer.files;
             }
-
-            loadFiles(files);
+            await loadFiles(files);
             return false;
         }
 
@@ -102,9 +118,8 @@ full text of the license.
         }
 
         function handleDragEnter(e) {
-
             // Prevent default behavior (Prevent file from being opened)
-            e.preventDefault();
+            preventDefault(e);
 
             var hasFiles = false;
 
@@ -119,7 +134,6 @@ full text of the license.
                 hasFiles = e.dataTransfer.files.length > 0;
             }
 
-            preventDefault(e);
             e.dataTransfer.dropEffect = 'link';
             e.target.classList.add('over');
             return false;
@@ -149,14 +163,20 @@ full text of the license.
     <app>Loading...</app>
 
     <script type="text/javascript">
-        setInterval(function () {
+        setInterval(async function () {
+            if (_loading) {
+                return;
+            }
             var input = document.getElementById("mainFileInput");
             if (input) {
                 var parent = input.parentNode;
                 var files = input.files;
                 if (files && files.length > 0) {
                     parent.removeChild(input);
-                    loadFiles(files);
+                    _loading = true;
+                    await loadFiles(files);
+                    _loading = false;
+                    alert('Loaded files from file input!');
                     var newInput = document.createElement("input");
                     var names = input.getAttributeNames();
                     for (var i = 0; i < names.length; i++) {

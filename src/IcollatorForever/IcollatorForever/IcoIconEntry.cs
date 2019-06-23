@@ -45,6 +45,7 @@ namespace IcollatorForever
                     {
                         // temporary until the mono team fixes the DEFLATE bug so I can read PNGs
                         _xorImage = new Image<Rgba32>(Description.Width, Description.Height);
+                        //_xorImage = Image.Load(Data);
                     }
                     else
                     {
@@ -225,11 +226,11 @@ namespace IcollatorForever
                 try
                 {
                     HeaderSize = s.ReadInt(4);
-                    Console.WriteLine("headerSize = " + HeaderSize);
+                    //Console.WriteLine("headerSize = " + HeaderSize);
                     Description.OverwriteWidth(s.ReadInt(4));
-                    Console.WriteLine("width = " + Description.Width);
+                    //Console.WriteLine("width = " + Description.Width);
                     IhHeight = s.ReadInt(4);
-                    Console.WriteLine("ihHeight = " + IhHeight);
+                    //Console.WriteLine("ihHeight = " + IhHeight);
                     if (IhHeight == Description.Height)
                     {
                         // this is an indication that the developer of the software
@@ -244,24 +245,24 @@ namespace IcollatorForever
                         {
                             data[16 + i] = replacementBytes[i];
                         }
-                        Console.WriteLine("ihHeight fixed: " + IhHeight);
+                        //Console.WriteLine("ihHeight fixed: " + IhHeight);
                     }
                     Description.OverwritePlanes(s.ReadInt(2));
-                    Console.WriteLine("planes = " + Description.Planes);
+                    //Console.WriteLine("planes = " + Description.Planes);
                     Description.OverwriteBitCount(s.ReadInt(2));
-                    Console.WriteLine("bitCount = " + Description.BitCount);
+                    //Console.WriteLine("bitCount = " + Description.BitCount);
                     IhCompression = s.ReadInt(4);
-                    Console.WriteLine("ihCompression = " + IhCompression);
+                    //Console.WriteLine("ihCompression = " + IhCompression);
                     IhImageSize = s.ReadInt(4);
-                    Console.WriteLine("ihImageSize = " + IhImageSize);
+                    //Console.WriteLine("ihImageSize = " + IhImageSize);
                     IhXpixelsPerM = s.ReadInt(4);
-                    Console.WriteLine("ihXpixelsPerM = " + IhXpixelsPerM);
+                    //Console.WriteLine("ihXpixelsPerM = " + IhXpixelsPerM);
                     IhYpixelsPerM = s.ReadInt(4);
-                    Console.WriteLine("ihYpixelsPerM = " + IhYpixelsPerM);
+                    //Console.WriteLine("ihYpixelsPerM = " + IhYpixelsPerM);
                     IhColorsUsed = s.ReadInt(4);
-                    Console.WriteLine("ihColorsUsed = " + IhColorsUsed);
+                    //Console.WriteLine("ihColorsUsed = " + IhColorsUsed);
                     IhColorsImportant = s.ReadInt(4);
-                    Console.WriteLine("ihColorsImportant = " + IhColorsImportant);
+                    //Console.WriteLine("ihColorsImportant = " + IhColorsImportant);
                 }
                 catch (Exception)
                 {

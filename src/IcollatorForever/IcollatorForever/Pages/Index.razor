@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using System.Threading;
+@using System.IO;
 
 <!--
 Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
@@ -14,7 +16,7 @@ full text of the license.
         <button id="saveButton" class="btn btn-primary" onclick="saveFile()" disabled=@NoEntries>Save to .ico</button>
     </div>
 </div>
-<div id="iconTableContainer" ondrop="return handleDrop(event);" ondragover="return handleDragOver(event);"
+<div id="iconTableContainer" ondrop="handleDrop(event); return false;" ondragover="return handleDragOver(event);"
      ondragenter="return handleDragEnter(event);" ondragleave="return handleDragLeave(event);">
     @if (_entries.Count == 0)
     {
@@ -40,9 +42,9 @@ full text of the license.
                 @for (int i = 0; i < _entries.Count; i++)
                 {
                     IIconEntry entry = _entries[i];
-                    string onclick = $"select({i})";
+                    string clickHandler = $"select({i})";
                     IconEntryDescription description = entry.Description;
-                    <tr onclick="@onclick" class="@(entry == _selectedEntry ? "selected" : "")">
+                    <tr onclick="@clickHandler" class="@(entry == _selectedEntry ? "selected" : "")">
                         @if (entry.HasAndImage)
                         {
                             <td><img src="@entry.XorDataUrl" /></td>
@@ -73,7 +75,7 @@ full text of the license.
     <button id="deleteButton" class="btn btn-primary" onclick="deleteSelected()" disabled=@NoSelection>Delete</button>
 </div>
 
-@functions {
+@code {
     static Index _instance;
 
     IIconEntry _selectedEntry;
@@ -82,15 +84,26 @@ full text of the license.
 
     bool NoSelection => _selectedEntry == null;
 
+    TaskCompletionSource<bool> _currentFileTaskCompletionSource;
+
+    byte[] _currentFileContents;
+
+    Timer _timer;
+
     List<IIconEntry> _entries = new List<IIconEntry>();
 
     List<Exception> _exceptions = new List<Exception>();
 
 
+
+
     [JSInvokable("AddFile")]
-    public static void AddFile(string filename, string base64contents)
+    public static async Task<bool> AddFile(string filename, string base64contents)
     {
-        _instance.TryAddFile(filename, base64contents);
+        Console.WriteLine("AddFile!");
+        bool result = await _instance.TryAddFile(filename, base64contents);
+        Console.WriteLine("result of TryAddFile = " + result);
+        return result;
     }
 
     [JSInvokable("Clear")]
@@ -108,6 +121,7 @@ full text of the license.
     [JSInvokable("Select")]
     public static void Select(int index)
     {
+        Console.WriteLine("Select " + index);
         _instance.SelectEntry(index);
     }
 
@@ -117,25 +131,62 @@ full text of the license.
         return _instance.GenerateBase64Ico();
     }
 
-    private void TryAddFile(string filename, string base64contents)
+    private async Task<bool> TryAddFile(string filename, string base64contents)
     {
-        byte[] contents = Convert.FromBase64String(base64contents);
+        byte[] fileBytes = Convert.FromBase64String(base64contents);
+
+        string extension = System.IO.Path.GetExtension(filename).ToLower();
+
+        bool success = false;
+
+        if (extension == null || extension.Length == 0 || extension == ".ico")
+        {
+            success = TryAddIcoFile(filename, fileBytes);
+
+            StateHasChanged();
+
+            return await Task.FromResult(success);
+        }
+        if (!success)
+        {
+            // if (extension == ".dll")
+        }
+
+        
+
+        return await Task.FromResult(false);
+
+        //_timer = new Timer(new TimerCallback(_ =>
+        //{
+
+
+        //    StateHasChanged();
+        //}), null, 10, 10);
+
+
+        //return _currentFileTaskCompletionSource.Task;
+
+    }
+
+    private bool TryAddIcoFile(string filename, byte[] bytes)
+    {
         try
         {
-            using (MemoryStream stream = new MemoryStream(contents))
+            using (MemoryStream stream = new MemoryStream(bytes))
             {
                 Icon icon = new Icon(filename, stream);
                 _entries.AddRange(icon.Entries);
+                _entries = _entries.OrderBy(e => e.Description).ToList();
+                StateHasChanged();
             }
-            //System.out.println("on file " + i);
+            return true;
         }
         catch (Exception e)
         {
             _exceptions.Add(e);
+            StateHasChanged();
         }
-        _entries = _entries.OrderBy(e => e.Description).ToList();
-
-        StateHasChanged();
+        return false;
     }
 
     private string GenerateBase64Ico()
@@ -170,6 +221,7 @@ full text of the license.
 
     private void SelectEntry(int index)
     {
+        Console.WriteLine("SelectEntry " + index);
         if (index > -1 && index < _entries.Count)
         {
             IIconEntry entry = _entries[index];
@@ -180,7 +232,6 @@ full text of the license.
             else
             {
                 _selectedEntry = entry;
-
             }
         }
         StateHasChanged();
