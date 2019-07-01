@@ -5,13 +5,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using MiscUtil.IO;
+using MiscUtil.Conversion;
 
 namespace IcollatorForever
 {
-    public class Icon: IDisposable
+    public class Icon : IDisposable
     {
         private IIconEntry[] _entries;
         private Stream _stream;
+        private EndianBinaryReader _reader;
 
         /// <summary>
         /// Gets the the list of entry descriptions read from the icon's header
@@ -40,9 +43,11 @@ namespace IcollatorForever
         public Icon(string filename, Stream s)
         {
             _stream = s;
-            s.ReadInt(2); // reserved field
-            s.ReadInt(2); // type field
-            int count = s.ReadInt(2);
+            _reader = new EndianBinaryReader(EndianBitConverter.Little, s);
+
+            _reader.ReadInt16(); // reserved field
+            _reader.ReadInt16(); // type field
+            int count = _reader.ReadInt16();
             EntryDescriptions = new IconEntryDescription[count];
             _entries = new IIconEntry[count];
             List<IIconEntry> list = new List<IIconEntry>();
@@ -52,10 +57,10 @@ namespace IcollatorForever
                 int height = s.ReadByte();
                 int colorCount = s.ReadByte();
                 int reserved2 = s.ReadByte();
-                int planes = s.ReadInt(2);
-                int bitCount = s.ReadInt(2);
-                int sizeInBytes = s.ReadInt(4);
-                int fileOffset = s.ReadInt(4);
+                int planes = _reader.ReadInt16();
+                int bitCount = _reader.ReadInt16();
+                int sizeInBytes = _reader.ReadInt32();
+                int fileOffset = _reader.ReadInt32();
                 if (width == 0)
                 {
                     width = 256;
@@ -117,6 +122,7 @@ namespace IcollatorForever
         public void Dispose()
         {
             _stream?.Dispose();
+            _reader?.Dispose();
         }
     }
 }

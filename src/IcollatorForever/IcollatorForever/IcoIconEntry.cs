@@ -4,12 +4,14 @@
 
 using System;
 using System.IO;
+using MiscUtil.IO;
+using MiscUtil.Conversion;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace IcollatorForever
 {
-    public class IcoIconEntry : IIconEntry
+    public class IcoIconEntry : IIconEntry, IDisposable
     {
         private int _startOfXorImage;
         private int _startOfAndImage;
@@ -19,6 +21,8 @@ namespace IcollatorForever
 
         private string _xorDataUrl;
         private string _andDataUrl;
+
+        private EndianBinaryReader _reader;
 
         public IconEntryDescription Description { get; }
 
@@ -123,6 +127,12 @@ namespace IcollatorForever
             SetData(data);
         }
 
+        public IcoIconEntry(IconEntryDescription description, byte[] data)
+        {
+            Description = description;
+            SetData(data);
+        }
+
         public void SetData(byte[] value)
         {
             Data = value;
@@ -158,7 +168,8 @@ namespace IcollatorForever
         public void ReadBmp()
         {
             ReadHeader(Data);
-            _startOfXorImage = 40;
+
+            _startOfXorImage = HeaderSize;
 
             int xorColorTableEntries = 0;
             if (Description.BitCount <= 8)
@@ -175,7 +186,7 @@ namespace IcollatorForever
             }
 
             int xorByteCount = Description.Height * bitsInRow / 8;
-            _startOfAndImage = 40 + xorColorTableEntries * 4 + xorByteCount;
+            _startOfAndImage = HeaderSize + xorColorTableEntries * 4 + xorByteCount;
             
             int bitsInAndRow = Description.Width;
             int andRemainder = bitsInAndRow % 32;
@@ -225,11 +236,12 @@ namespace IcollatorForever
             {
                 try
                 {
-                    HeaderSize = s.ReadInt(4);
+                    _reader = new EndianBinaryReader(EndianBitConverter.Little, s);
+                    HeaderSize = _reader.ReadInt32();
                     //Console.WriteLine("headerSize = " + HeaderSize);
-                    Description.OverwriteWidth(s.ReadInt(4));
+                    Description.OverwriteWidth(_reader.ReadInt32());
                     //Console.WriteLine("width = " + Description.Width);
-                    IhHeight = s.ReadInt(4);
+                    IhHeight = _reader.ReadInt32();
                     //Console.WriteLine("ihHeight = " + IhHeight);
                     if (IhHeight == Description.Height)
                     {
@@ -247,21 +259,21 @@ namespace IcollatorForever
                         }
                         //Console.WriteLine("ihHeight fixed: " + IhHeight);
                     }
-                    Description.OverwritePlanes(s.ReadInt(2));
+                    Description.OverwritePlanes(_reader.ReadInt16());
                     //Console.WriteLine("planes = " + Description.Planes);
-                    Description.OverwriteBitCount(s.ReadInt(2));
+                    Description.OverwriteBitCount(_reader.ReadInt16());
                     //Console.WriteLine("bitCount = " + Description.BitCount);
-                    IhCompression = s.ReadInt(4);
+                    IhCompression = _reader.ReadInt32();
                     //Console.WriteLine("ihCompression = " + IhCompression);
-                    IhImageSize = s.ReadInt(4);
+                    IhImageSize = _reader.ReadInt32();
                     //Console.WriteLine("ihImageSize = " + IhImageSize);
-                    IhXpixelsPerM = s.ReadInt(4);
+                    IhXpixelsPerM = _reader.ReadInt32();
                     //Console.WriteLine("ihXpixelsPerM = " + IhXpixelsPerM);
-                    IhYpixelsPerM = s.ReadInt(4);
+                    IhYpixelsPerM = _reader.ReadInt32();
                     //Console.WriteLine("ihYpixelsPerM = " + IhYpixelsPerM);
-                    IhColorsUsed = s.ReadInt(4);
+                    IhColorsUsed = _reader.ReadInt32();
                     //Console.WriteLine("ihColorsUsed = " + IhColorsUsed);
-                    IhColorsImportant = s.ReadInt(4);
+                    IhColorsImportant = _reader.ReadInt32();
                     //Console.WriteLine("ihColorsImportant = " + IhColorsImportant);
                 }
                 catch (Exception)
@@ -416,6 +428,10 @@ namespace IcollatorForever
             return Description.GetHashCode();
         }
 
+        public void Dispose()
+        {
+            _reader?.Dispose();
+        }
     }
 
 }

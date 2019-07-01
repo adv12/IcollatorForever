@@ -6,6 +6,7 @@ full text of the license.
 
 @inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components
+@inject IJSRuntime JSRuntime;
 @inject IUriHelper UriHelper
 
 <div class="main">
@@ -23,18 +24,16 @@ full text of the license.
 
 @code
 {
-    private static MainLayout _instance;
-
     [JSInvokable("GoToRoot")]
-    public static void GoToRoot()
+    public void GoToRoot()
     {
-        _instance.UriHelper.NavigateTo("./");
+        UriHelper.NavigateTo("./");
         Console.WriteLine("navigated back");
     }
 
     protected override void OnInit()
     {
-        _instance = this;
+        JSRuntime.InvokeAsync<object>("setDotNetLayoutInstance", DotNetObjectRef.Create(this));
         base.OnInit();
     }
 }

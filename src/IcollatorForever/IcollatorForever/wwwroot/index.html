@@ -17,13 +17,18 @@ full text of the license.
         var _loading = false;
 
         var dotNetInstance;
+        var dotNetLayoutInstance;
 
         function setDotNetIndexInstance(obj) {
             dotNetInstance = obj;
         }
 
+        function setDotNetLayoutInstance(obj) {
+            dotNetLayoutInstance = obj;
+        }
+
         window.onbeforeunload = function (e) {
-            //DotNet.invokeMethod('IcollatorForever', 'GoToRoot');
+            dotNetInstance.invokeMethod('GoToRoot');
         }
 
         function startLoading() {
