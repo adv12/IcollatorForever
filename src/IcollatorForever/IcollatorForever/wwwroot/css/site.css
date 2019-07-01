@@ -32,8 +32,6 @@ app {
 
 .header {
     flex: initial;
-    display: flex;
-    align-items: center;
     background-color: #e6e6e6;
     border-bottom: 1px solid #d6d6d6;
     padding: 16px;
@@ -60,27 +58,33 @@ app {
     cursor: pointer;
 }
 
-table {
+#wrapper {
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#iconTableContainer table {
     margin-left: 16px;
     margin-right: 16px;
     border-collapse: collapse;
 }
 
-tr.selected {
+#iconTableContainer tr.selected {
     color: #fff;
     background-color: #0069d9;
 }
 
-th, td {
+#iconTableContainer th, td {
     padding: 12px;
     border-bottom: 1px solid #d6d6d6;
 }
 
-th {
+#iconTableContainer th {
     background-color: #e6e6e6;
 }
 
-td {
+#iconTableContainer td {
     border-top: 1px solid #d6d6d6;
 }
 
@@ -155,4 +159,77 @@ td {
     font-size: 2rem;
     font-weight: bold;
     margin-bottom: 0px;
+}
+
+#about {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+}
+
+#about > * {
+    flex: auto;
+}
+
+#about > *:last-child {
+    flex: none;
+    padding-top: 16px;
+}
+
+#genericImageOptions {
+    display: block;
+    flex: auto;
+    overflow: auto;
+    padding: 16px;
+}
+
+    #genericImageOptions table {
+        border-collapse: collapse;
+    }
+
+    #genericImageOptions th, td {
+        padding: 12px;
+        border: 1px solid #d6d6d6;
+    }
+
+    #genericImageOptions th {
+        background-color: #e6e6e6;
+    }
+
+    #genericImageOptions td {
+        border-top: 1px solid #d6d6d6;
+        text-align: center;
+    }
+
+    #genericImageOptions image {
+        display: block;
+    }
+
+#optionsPreviewAndTable {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    margin-top: 16px;
+}
+
+#optionsPreviewAndTable * {
+    margin-right: 16px;
+    margin-bottom: 16px;
+}
+
+#optionsImagePreview {
+    max-width: 256px;
+    max-height: 256px;
+}
+
+#userInputOverlay {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display:none;
+}
+
+.loading #userInputOverlay {
+    display: absolute;
 }

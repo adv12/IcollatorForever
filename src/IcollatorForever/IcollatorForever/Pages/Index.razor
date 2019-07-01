@@ -1,6 +1,9 @@
 ﻿@page "/"
+@inject IJSRuntime JSRuntime;
 @using System.Threading;
 @using System.IO;
+@using SixLabors.ImageSharp;
+@using SixLabors.ImageSharp.PixelFormats;
 
 <!--
 Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
@@ -8,238 +11,422 @@ See license.txt in the IcollatorForever distribution or repository for the
 full text of the license.
 -->
 
-<div id="inputContainer">
-    <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon" multiple /></div>
-    <div class="topButtons">
-        <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
-        <button id="clearButton" class="btn btn-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
-        <button id="saveButton" class="btn btn-primary" onclick="saveFile()" disabled=@NoEntries>Save to .ico</button>
+@if (!_showingImageOptions)
+{
+    <div id="inputContainer">
+        <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon" multiple /></div>
+        <div class="topButtons">
+            <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
+            <button id="clearButton" class="btn btn-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
+            <button id="saveButton" class="btn btn-primary" onclick="saveFile()" disabled=@NoEntries>Save to .ico</button>
+        </div>
     </div>
-</div>
-<div id="iconTableContainer" ondrop="handleDrop(event); return false;" ondragover="return handleDragOver(event);"
-     ondragenter="return handleDragEnter(event);" ondragleave="return handleDragLeave(event);">
-    @if (_entries.Count == 0)
-    {
-        <div id="dropTarget">Drag and drop files here to add them to your icon.</div>
-    }
-    @if (_entries.Count > 0)
-    {
+    <div id="iconTableContainer" ondrop="handleDrop(event); return false;" ondragover="return handleDragOver(event);"
+         ondragenter="return handleDragEnter(event);" ondragleave="return handleDragLeave(event);">
+        @if (_entries.Count == 0)
+        {
+            <div id="dropTarget">Drag and drop files here to add them to your icon.</div>
+        }
+        @if (_entries.Count > 0)
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>XOR Image</th>
+                        <th>AND Image</th>
+                        <th>Source File Name</th>
+                        <th>Source Index</th>
+                        <th>Width</th>
+                        <th>Height</th>
+                        <th>Bit Count</th>
+                        <th>Color Count</th>
+                        <th>Size in Bytes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < _entries.Count; i++)
+        {
+            IIconEntry entry = _entries[i];
+            IconEntryDescription description = entry.Description;
+            string key = description.ToKey();
+                        <tr @key="@key" onclick="select(elementIndex(this))" class="@(entry == _selectedEntry ? "selected" : "")">
+                            @if (entry.HasAndImage)
+        {
+                                <td><img src="@entry.XorDataUrl" /></td>
+                                <td><img src="@entry.AndDataUrl" /></td>
+        }
+        else
+        {
+                                <td colspan="2"><img src="@entry.XorDataUrl" title="PNGs are supported but not displayed" /></td>
+        }
+                            <td>@description.SourceFileName</td>
+                            <td>@description.SourceIndex</td>
+                            <td>@description.Width</td>
+                            <td>@description.Height</td>
+                            <td>@description.BitCount</td>
+                            <td>@description.ColorCount</td>
+                            <td>@description.SizeInBytes</td>
+                        </tr>
+        }
+                </tbody>
+            </table>
+        }
+        @foreach (Exception ex in _exceptions)
+        {
+            <p>@ex.ToString()</p>
+        }
+    </div>
+    <div id="selectedEntryActions" class='bottomButtons @(NoSelection ? "" : "entrySelected")'>
+        <button id="deleteButton" class="btn btn-primary" onclick="deleteSelected()" disabled=@NoSelection>Delete</button>
+    </div>
+    <div id="userInputOverlay"></div>
+}
+@if (_showingImageOptions)
+{
+<div id="genericImageOptions">
+    <h2>@(_optionsImageName ?? "Image")</h2>
+    Check the box for each combination of size and color count you want to generate from @(_optionsImageName ?? "the image").
+    Then click "Generate Entries" to add them to your icon.
+    (Note: this doesn't actually work yet, so don't be disappointed when nothing gets added to your icon.)
+    <div id="optionsPreviewAndTable">
+        <img id="optionsImagePreview" src="@_optionsImageDataUrl" />
         <table>
             <thead>
                 <tr>
-                    <th>XOR Image</th>
-                    <th>AND Image</th>
-                    <th>Source File Name</th>
-                    <th>Source Index</th>
-                    <th>Width</th>
-                    <th>Height</th>
-                    <th>Bit Count</th>
-                    <th>Color Count</th>
-                    <th>Size in Bytes</th>
+                    <th></th>
+                    <th>All</th>
+                    <th>2 Colors</th>
+                    <th>16 Colors</th>
+                    <th>256 Colors</th>
+                    <th>Full Color</th>
+                </tr>
+                <tr>
+                    <th>All</th>
+                    <td><input type="checkbox" checked="@AllSelected" @onclick="@ToggleAll" /></td>
+                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(2))" @onclick="@(() => ToggleBitDepthColumn(2) )" /></td>
+                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(4))" @onclick="@(() => ToggleBitDepthColumn(4) )" /></td>
+                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(8))" @onclick="@(() => ToggleBitDepthColumn(8) )" /></td>
+                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(32))" @onclick="@(() => ToggleBitDepthColumn(32) )" /></td>
                 </tr>
             </thead>
             <tbody>
-                @for (int i = 0; i < _entries.Count; i++)
-                {
-                    IIconEntry entry = _entries[i];
-                    string clickHandler = $"select({i})";
-                    IconEntryDescription description = entry.Description;
-                    <tr onclick="@clickHandler" class="@(entry == _selectedEntry ? "selected" : "")">
-                        @if (entry.HasAndImage)
-                        {
-                            <td><img src="@entry.XorDataUrl" /></td>
-                            <td><img src="@entry.AndDataUrl" /></td>
-                        }
-                        else
-                        {
-                            <td colspan="2"><img src="@entry.XorDataUrl" title="PNGs are supported but not displayed" /></td>
-                        }
-                        <td>@description.SourceFileName</td>
-                        <td>@description.SourceIndex</td>
-                        <td>@description.Width</td>
-                        <td>@description.Height</td>
-                        <td>@description.BitCount</td>
-                        <td>@description.ColorCount</td>
-                        <td>@description.SizeInBytes</td>
+                @for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
+        {
+            int size = 1 << sizePower;
+            int localSizePower = sizePower;
+                    <tr data-row-size-power="@sizePower">
+                        <th>@(size)x@(size) pixels</th>
+                        <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSizePower)" @onclick="@(() => ToggleSizePowerRow(localSizePower))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 2)" @onclick="@(() => ToggleTypeSelection(localSizePower, 2))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 4)" @onclick="@(() => ToggleTypeSelection(localSizePower, 4))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 8)" @onclick="@(() => ToggleTypeSelection(localSizePower, 8))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 32)" @onclick="@(() => ToggleTypeSelection(localSizePower, 32))" /></td>
                     </tr>
-                }
+        }
             </tbody>
         </table>
-    }
-    @foreach (Exception ex in _exceptions)
-    {
-        <p>@ex.ToString()</p>
-    }
+    </div>
+    <button id="generateButton" class="btn btn-primary" @onclick="@GenerateEntries">Generate Entries</button>
 </div>
-<div id="selectedEntryActions" class='bottomButtons @(NoSelection ? "" : "entrySelected")'>
-    <button id="deleteButton" class="btn btn-primary" onclick="deleteSelected()" disabled=@NoSelection>Delete</button>
-</div>
+}
 
 @code {
-    static Index _instance;
 
-    IIconEntry _selectedEntry;
+                int[] _bitDepths = new int[] { 2, 4, 8, 32 };
 
-    bool NoEntries => _entries.Count == 0;
+                IIconEntry _selectedEntry;
 
-    bool NoSelection => _selectedEntry == null;
+                bool NoEntries => _entries.Count == 0;
 
-    TaskCompletionSource<bool> _currentFileTaskCompletionSource;
+                bool NoSelection => _selectedEntry == null;
 
-    byte[] _currentFileContents;
+                byte[] _currentFileContents;
 
-    Timer _timer;
+                Timer _timer;
 
-    List<IIconEntry> _entries = new List<IIconEntry>();
+                List<IIconEntry> _entries = new List<IIconEntry>();
 
-    List<Exception> _exceptions = new List<Exception>();
+                List<Exception> _exceptions = new List<Exception>();
 
+                bool _showingImageOptions = false;
 
+                TaskCompletionSource<bool> _generatingEntriesCompletionSource;
 
+                TaskInfo<bool> _generatingEntriesTaskInfo;
 
-    [JSInvokable("AddFile")]
-    public static async Task<bool> AddFile(string filename, string base64contents)
+                HashSet<Tuple<int, int>> _selectedTypes = new HashSet<Tuple<int, int>>();
+
+                Image<Rgba32> _optionsImage;
+
+                string _optionsImageDataUrl;
+
+                string _optionsImageName;
+
+                int MaxSizePower
+{
+                    get
     {
-        Console.WriteLine("AddFile!");
-        bool result = await _instance.TryAddFile(filename, base64contents);
-        Console.WriteLine("result of TryAddFile = " + result);
-        return result;
-    }
+                        if (_optionsImage == null)
+                        {
+                            return 8;
+                        }
+                        int minDimension = Math.Min(_optionsImage.Height, _optionsImage.Width);
+                        return Math.Min(8, minDimension);
+                    }
+                }
 
-    [JSInvokable("Clear")]
-    public static void Clear()
+                bool AllSelected
+{
+                    get
     {
-        _instance.ClearEntries();
-    }
+                        foreach (int bitDepth in _bitDepths)
+                        {
+                            if (!AreAllSizePowersSelected(bitDepth))
+                            {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                }
 
-    [JSInvokable("DeleteSelected")]
-    public static void DeleteSelected()
-    {
-        _instance.DeleteSelectedEntry();
-    }
+                private async Task<bool> GenerateFromImageOptionsAsync(string filename, byte[] bytes)
+                {
+                    _generatingEntriesCompletionSource = new TaskCompletionSource<bool>();
+                    _showingImageOptions = true;
+                    Console.WriteLine("marking state changed");
+                    StateHasChanged();
+                    bool success = await _generatingEntriesCompletionSource.Task;
+                    _showingImageOptions = false;
+                    _generatingEntriesTaskInfo = null;
+                    _generatingEntriesCompletionSource = null;
+                    _optionsImage = null;
+                    _optionsImageDataUrl = null;
+                    _optionsImageName = null;
+                    StateHasChanged();
+                    return await Task.FromResult(success);
+                }
 
-    [JSInvokable("Select")]
-    public static void Select(int index)
-    {
-        Console.WriteLine("Select " + index);
-        _instance.SelectEntry(index);
-    }
-
-    [JSInvokable("GenerateBase64IcoString")]
-    public static string GenerateBase64IcoString()
-    {
-        return _instance.GenerateBase64Ico();
-    }
-
-    private async Task<bool> TryAddFile(string filename, string base64contents)
-    {
-        byte[] fileBytes = Convert.FromBase64String(base64contents);
-
-        string extension = System.IO.Path.GetExtension(filename).ToLower();
-
-        bool success = false;
-
-        if (extension == null || extension.Length == 0 || extension == ".ico")
-        {
-            success = TryAddIcoFile(filename, fileBytes);
-
-            StateHasChanged();
-
-            return await Task.FromResult(success);
-        }
-        if (!success)
-        {
-            // if (extension == ".dll")
-        }
-
-        
-
-        return await Task.FromResult(false);
-
-        //_timer = new Timer(new TimerCallback(_ =>
-        //{
-
-
-        //    StateHasChanged();
-        //}), null, 10, 10);
-
-
-        //return _currentFileTaskCompletionSource.Task;
-
-    }
-
-    private bool TryAddIcoFile(string filename, byte[] bytes)
-    {
-        try
-        {
-            using (MemoryStream stream = new MemoryStream(bytes))
+            [JSInvokable("AddFileAsync")]
+            public async Task<bool> AddFileAsync(string filename, string base64contents)
             {
-                Icon icon = new Icon(filename, stream);
-                _entries.AddRange(icon.Entries);
-                _entries = _entries.OrderBy(e => e.Description).ToList();
+                byte[] fileBytes = Convert.FromBase64String(base64contents);
+
+                string extension = System.IO.Path.GetExtension(filename).ToLower();
+
+                bool success = false;
+
+                if (extension == null || extension.Length == 0 || extension == ".ico")
+                {
+                    success = TryAddIcoFile(filename, fileBytes);
+                }
+                if (success)
+                {
+                    StateHasChanged();
+                    return await Task.FromResult(true);
+                }
+                else
+                {
+                    try
+                    {
+                        Console.WriteLine("Loading image");
+                        _optionsImage = Image.Load<Rgba32>(fileBytes);
+                        _optionsImageDataUrl = "data:image/jpeg;base64," + _optionsImage.ToBase64JpegString();
+                        _optionsImageName = filename;
+                        _generatingEntriesTaskInfo = new TaskInfo<bool>();
+                        return await GenerateFromImageOptionsAsync(filename, fileBytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("exception loading image: " + ex.ToString());
+                        _optionsImageName = null;
+                        _optionsImage = null;
+                        _showingImageOptions = false;
+                        _generatingEntriesCompletionSource = null;
+                        _generatingEntriesTaskInfo = null;
+                        _generatingEntriesCompletionSource?.SetResult(false);
+                        StateHasChanged();
+                        return false;
+                    }
+                }
+            }
+
+            private bool TryAddIcoFile(string filename, byte[] bytes)
+            {
+                try
+                {
+                    using (MemoryStream stream = new MemoryStream(bytes))
+                    {
+                        Icon icon = new Icon(filename, stream);
+                        _entries.AddRange(icon.Entries);
+                        _entries = _entries.OrderBy(e => e.Description).ToList();
+                        StateHasChanged();
+                    }
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    _exceptions.Add(e);
+                    StateHasChanged();
+                }
+                return false;
+            }
+
+            private bool IsTypeSelected(int sizePower, int bitDepth)
+            {
+                return _selectedTypes.Contains(new Tuple<int, int>
+                (sizePower, bitDepth));
+            }
+
+            private bool AreAllBitDepthsSelected(int sizePower)
+            {
+                foreach (int bitDepth in _bitDepths)
+                {
+                    if (!IsTypeSelected(sizePower, bitDepth))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            private bool AreAllSizePowersSelected(int bitDepth)
+            {
+                for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
+                {
+                    if (!IsTypeSelected(sizePower, bitDepth))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            private void SetTypeSelected(int sizePower, int bitDepth, bool selected)
+            {
+                var type = new Tuple<int, int>
+                    (sizePower, bitDepth);
+                if (selected)
+                {
+                    _selectedTypes.Add(type);
+                }
+                else
+                {
+                    _selectedTypes.Remove(type);
+                }
+            }
+
+            private void ToggleTypeSelection(int sizePower, int bitDepth)
+            {
+                Tuple<int, int>
+                    type = new Tuple<int, int>
+                        (sizePower, bitDepth);
+                if (_selectedTypes.Contains(type))
+                {
+                    _selectedTypes.Remove(type);
+                }
+                else
+                {
+                    _selectedTypes.Add(type);
+                }
                 StateHasChanged();
             }
-            return true;
-        }
-        catch (Exception e)
-        {
-            _exceptions.Add(e);
-            StateHasChanged();
-        }
-        return false;
-    }
 
-    private string GenerateBase64Ico()
-    {
-        if (_entries.Count > 0)
-        {
-            using (MemoryStream stream = new MemoryStream())
+            private void ToggleBitDepthColumn(int bitDepth)
             {
-                IconUtils.WriteToStream(_entries, stream);
-                return Convert.ToBase64String(stream.GetBuffer());
+                bool allSelected = AreAllSizePowersSelected(bitDepth);
+                for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
+                {
+                    SetTypeSelected(sizePower, bitDepth, !allSelected);
+                }
+                StateHasChanged();
             }
-        }
-        return null;
-    }
 
-    private void ClearEntries()
-    {
-        _entries.Clear();
-        _selectedEntry = null;
-        StateHasChanged();
-    }
-
-    private void DeleteSelectedEntry()
-    {
-        if (_selectedEntry != null)
-        {
-            _entries.Remove(_selectedEntry);
-            _selectedEntry = null;
-            StateHasChanged();
-        }
-    }
-
-    private void SelectEntry(int index)
-    {
-        Console.WriteLine("SelectEntry " + index);
-        if (index > -1 && index < _entries.Count)
-        {
-            IIconEntry entry = _entries[index];
-            if (entry == _selectedEntry)
+            private void ToggleSizePowerRow(int sizePower)
             {
+                bool allSelected = AreAllBitDepthsSelected(sizePower);
+                foreach (int bitDepth in _bitDepths)
+                {
+                    SetTypeSelected(sizePower, bitDepth, !allSelected);
+                }
+                StateHasChanged();
+            }
+
+            private void ToggleAll()
+            {
+                bool allSelected = AllSelected;
+                foreach (int bitDepth in _bitDepths)
+                {
+                    for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
+                    {
+                        SetTypeSelected(sizePower, bitDepth, !allSelected);
+                    }
+                }
+                StateHasChanged();
+            }
+
+            private void GenerateEntries()
+            {
+                Console.WriteLine("Generated Entries!");
+                _generatingEntriesCompletionSource.SetResult(true);
+                _generatingEntriesTaskInfo = null;
+                _showingImageOptions = false;
+                StateHasChanged();
+            }
+
+            private string GenerateBase64Ico()
+            {
+                if (_entries.Count > 0)
+                {
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        IconUtils.WriteToStream(_entries, stream);
+                        return Convert.ToBase64String(stream.GetBuffer());
+                    }
+                }
+                return null;
+            }
+
+            [JSInvokable("Clear")]
+            public void Clear()
+            {
+                _entries.Clear();
                 _selectedEntry = null;
+                StateHasChanged();
             }
-            else
+
+            [JSInvokable("DeleteSelected")]
+            public void DeleteSelected()
             {
-                _selectedEntry = entry;
+                if (_selectedEntry != null)
+                {
+                    _entries.Remove(_selectedEntry);
+                    _selectedEntry = null;
+                    StateHasChanged();
+                }
+            }
+
+            [JSInvokable("Select")]
+            public void Select(int index)
+            {
+                if (index > -1 && index < _entries.Count)
+                {
+                    IIconEntry entry = _entries[index];
+                    if (entry == _selectedEntry)
+                    {
+                        _selectedEntry = null;
+                    }
+                    else
+                    {
+                        _selectedEntry = entry;
+                    }
+                }
+                StateHasChanged();
+            }
+
+            protected override void OnInit()
+            {
+                JSRuntime.InvokeAsync<object>("setDotNetIndexInstance", DotNetObjectRef.Create(this));
+                base.OnInit();
             }
         }
-        StateHasChanged();
-    }
-
-    protected override void OnInit()
-    {
-        _instance = this;
-        base.OnInit();
-    }
-}

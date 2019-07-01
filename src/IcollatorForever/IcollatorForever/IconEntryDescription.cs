@@ -3,6 +3,7 @@
 // full text of the license.
 
 using System;
+using System.Text;
 
 namespace IcollatorForever
 {
@@ -121,6 +122,27 @@ namespace IcollatorForever
                     return 0;
                 }
             }
+        }
+
+        public string ToKey()
+        {
+            StringBuilder sb = new StringBuilder(SourceFileName);
+            sb.Append("[");
+            sb.Append(SourceIndex);
+            sb.Append("]@");
+            sb.Append(Width);
+            sb.Append("x");
+            sb.Append(Height);
+            sb.Append(",");
+            sb.Append(BitCount);
+            sb.Append("bit,");
+            sb.Append(ColorCount);
+            sb.Append("colors,");
+            sb.Append(SizeInBytes);
+            sb.Append("bytes,");
+            sb.Append("fileOffset=");
+            sb.Append(FileOffset);
+            return sb.ToString();
         }
     }
 }

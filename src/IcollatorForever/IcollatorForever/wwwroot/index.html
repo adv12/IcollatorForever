@@ -16,6 +16,41 @@ full text of the license.
 
         var _loading = false;
 
+        var dotNetInstance;
+
+        function setDotNetIndexInstance(obj) {
+            dotNetInstance = obj;
+        }
+
+        window.onbeforeunload = function (e) {
+            //DotNet.invokeMethod('IcollatorForever', 'GoToRoot');
+        }
+
+        function startLoading() {
+            _loading = true;
+            document.body.classList.add("loading");
+        }
+
+        function endLoading() {
+            _loading = false;
+            document.body.classList.remove("loading");
+        }
+
+        function elementIndex(node) {
+            console.log("node name = " + node.name);
+            var nodes = node.parentNode.childNodes;
+            var elementIndex = 0;
+            for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].nodeType == Node.ELEMENT_NODE) {
+                    if (nodes[i] == node) {
+                        return elementIndex;
+                    }
+                    elementIndex++;
+                }
+            }
+            return -1;
+        }
+
         async function loadFiles(files) {
             for (var i = 0; i < files.length; i++) {
                 await addIconFile(files[i]);
@@ -40,24 +75,24 @@ full text of the license.
 
         async function addIconFile(file) {
             var bytes = await readFileAsync(file);
-            await DotNet.invokeMethod('IcollatorForever', 'AddFile', file.name, btoa(bytes));
+            await dotNetInstance.invokeMethodAsync('AddFileAsync', file.name, btoa(bytes));
             console.log('successfully added icon file');
         }
 
         function clearTable() {
             var yes = confirm('Clear the table and start over?');
             if (yes) {
-                DotNet.invokeMethod('IcollatorForever', 'Clear');
+                dotNetInstance.invokeMethod('Clear');
             }
         }
 
         function select(index) {
             console.log("about to call Select");
-            DotNet.invokeMethod('IcollatorForever', 'Select', index);
+            dotNetInstance.invokeMethod('Select', index);
         }
 
         function deleteSelected() {
-            DotNet.invokeMethod('IcollatorForever', 'DeleteSelected');
+            dotNetInstance.invokeMethod('DeleteSelected');
         }
 
         // https://stackoverflow.com/questions/13405129/javascript-create-and-save-file
@@ -80,7 +115,7 @@ full text of the license.
         }
 
         function saveFile() {
-            var base64 = DotNet.invokeMethod('IcollatorForever', 'GenerateBase64IcoString');
+            var base64 = dotNetInstance.invokeMethod('GenerateBase64IcoString');
             var byteChars = atob(base64);
             const byteNumbers = new Array(byteChars.length);
             for (let i = 0; i < byteChars.length; i++) {
@@ -96,7 +131,7 @@ full text of the license.
             
             e.target.classList.remove('over');
 
-            _loading = true;
+            startLoading();
             var files = [];
             var items = e.dataTransfer.items;
             if (items) {
@@ -109,7 +144,7 @@ full text of the license.
                 files = e.dataTransfer.files;
             }
             await loadFiles(files);
-            _loading = false;
+            endLoading();
             return false;
         }
 
@@ -175,9 +210,9 @@ full text of the license.
                 var files = input.files;
                 if (files && files.length > 0) {
                     parent.removeChild(input);
-                    _loading = true;
+                    startLoading();
                     await loadFiles(files);
-                    _loading = false;
+                    endLoading();
                     var newInput = document.createElement("input");
                     var names = input.getAttributeNames();
                     for (var i = 0; i < names.length; i++) {

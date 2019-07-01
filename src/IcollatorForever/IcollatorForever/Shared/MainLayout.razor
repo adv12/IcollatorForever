@@ -5,12 +5,36 @@ full text of the license.
 -->
 
 @inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components
+@inject IUriHelper UriHelper
 
 <div class="main">
     <div class="header">
         <h1>Icollator Forever</h1>
+        <div>
+            Combine multiple Windows .ico files into one.  Also do other, related, things.
+            <a href="About">More...</a>
+        </div>
     </div>
     <div class="content">
         @Body
     </div>
 </div>
+
+@code
+{
+    private static MainLayout _instance;
+
+    [JSInvokable("GoToRoot")]
+    public static void GoToRoot()
+    {
+        _instance.UriHelper.NavigateTo("./");
+        Console.WriteLine("navigated back");
+    }
+
+    protected override void OnInit()
+    {
+        _instance = this;
+        base.OnInit();
+    }
+}

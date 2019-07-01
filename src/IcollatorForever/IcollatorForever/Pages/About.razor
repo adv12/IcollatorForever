@@ -1,0 +1,28 @@
+﻿@page "/About"
+
+<div id="about">
+    <div>
+        <p>
+            Icollator Forever is a web-based rewrite of <a href="http://www.the-vardemans.net/andrew/software">Icollator</a>,
+            a small tool for combining multiple Windows .ico files into one.  This is useful if you are still interested in the archaic task
+            of generating .ico files that look good at limited bit depths or if you're just really into the .ico format and want to know all
+            the nitty gritty details of what's in your files.  By now there are plenty of other tools that will generate icons at all the
+            appropriate sizes for multiple platforms and purposes from a single high-quality image.  So maybe Icollator Forever is more about
+            me experimenting with new technology than it is about you doing something useful.
+        </p>
+        <p>
+            Icollator Forever is built using Blazor, a cool new/upcoming technology from Microsoft that allows developers to write C# code
+            and run it within the browser using a version of the Mono runtime that has been compiled to WebAssembly.  It's all pretty weird
+            stuff, and you probably don't care.  One cool thing it means for you is that your images never leave your computer.  Everything
+            is running client side, so once you've waited for the enormous web application to load, you don't have to upload files to a
+            web server that does the image processing.  It's all happening on your computer.
+        </p>
+        <p>
+            Icollator Forever is open source, and it depends on other open source software, in particular
+            <a href="https://github.com/SixLabors/ImageSharp">ImageSharp</a> from <a href="https://sixlabors.com/">SixLabors</a>.
+            And I guess it uses Twitter Bootstrap, though I don't know any further details because I just built it on whatever came
+            with Microsoft's Blazor sample app.  It may use <a href="https://github.com/secana/PeNet">PeNet</a> someday soon.
+        </p>
+    </div>
+    <div><a class="btn btn-primary" href="./">Home</a></div>
+</div>
