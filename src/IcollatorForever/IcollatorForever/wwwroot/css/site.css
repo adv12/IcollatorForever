@@ -193,6 +193,7 @@ app {
     }
 
     #genericImageOptions th {
+        line-height: normal;
         background-color: #e6e6e6;
     }
 
@@ -205,6 +206,11 @@ app {
         display: block;
     }
 
+    #genericImageOptions button {
+        margin-right: 16px;
+        margin-left: 0;
+    }
+
 #optionsPreviewAndTable {
     display: flex;
     flex-wrap: wrap;
@@ -212,7 +218,7 @@ app {
     margin-top: 16px;
 }
 
-#optionsPreviewAndTable * {
+#optionsPreviewAndTable > * {
     margin-right: 16px;
     margin-bottom: 16px;
 }

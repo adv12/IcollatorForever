@@ -5,8 +5,12 @@
 using System;
 using System.Collections;
 using System.IO;
+using MiscUtil.IO;
+using MiscUtil.Conversion;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Quantization;
 
 namespace IcollatorForever
 {
@@ -53,7 +57,7 @@ namespace IcollatorForever
                 case 24:
                     return image.ToIcoIconEntryFullColor(description);
                 default:
-                    return null;
+                    return image.ToIcoIconEntryIndexedColor(description);
             }
         }
 
@@ -63,6 +67,20 @@ namespace IcollatorForever
 
             byte[] andImageBytes = image.GetAndImageBytes(description);
 
+            return GetIcoIconEntry(description, xorImageBytes, andImageBytes);
+        }
+
+        public static IcoIconEntry ToIcoIconEntryIndexedColor(this Image<Rgba32> image, IconEntryDescription description)
+        {
+            byte[] xorImageBytes = image.GetXorImageBytesIndexedColor(description);
+
+            byte[] andImageBytes = image.GetAndImageBytes(description);
+
+            return GetIcoIconEntry(description, xorImageBytes, andImageBytes);
+        }
+
+        private static IcoIconEntry GetIcoIconEntry(IconEntryDescription description, byte[] xorImageBytes, byte[] andImageBytes)
+        {
             description.OverwriteSizeInBytes(40 + xorImageBytes.Length + andImageBytes.Length);
             byte[] header = description.ToIcoEntryHeader();
             Console.WriteLine($"header.Length = {header.Length}");
@@ -100,6 +118,80 @@ namespace IcollatorForever
                 }
             }
             return xorImageBytes;
+        }
+
+        public static byte[] GetXorImageBytesIndexedColor(this Image<Rgba32> image, IconEntryDescription description)
+        {
+            int bitCount = description.BitCount;
+            int numColors = 1 << bitCount;
+            if (bitCount == 1)
+            {
+                image = image.Clone(x => x.BlackWhite());
+            }
+            WuQuantizer quantizer = new WuQuantizer(Math.Min(255, numColors));
+            var frameQuantizer = quantizer.CreateFrameQuantizer<Rgba32>(new Configuration());
+            var quantizedFrame = frameQuantizer.QuantizeFrame(image.Frames[0]);
+            Console.WriteLine($"quantizedFrame.Palette.Length = {quantizedFrame.Palette.Length}");
+            int bitsInRow = quantizedFrame.Width * bitCount;
+            // rows are always a multiple of 32 bits long
+            // (padded with 0's if necessary)
+            int remainder = bitsInRow % 32;
+            int padding = 0;
+            if (remainder > 0)
+            {
+                Console.WriteLine($"remainder = {remainder}");
+                padding = 32 - remainder;
+                bitsInRow += padding;
+            }
+            Console.WriteLine($"bitsInRow = {bitsInRow}");
+            int bytesInRow = bitsInRow / 8;
+            Console.WriteLine($"bytesInRow = {bytesInRow}");
+            using (MemoryStream stream  = new MemoryStream())
+            using (EndianBinaryWriter writer = new EndianBinaryWriter(EndianBitConverter.Little, stream))
+            {
+                foreach (Rgba32 pixel in quantizedFrame.Palette)
+                {
+                    writer.Write(pixel.B);
+                    writer.Write(pixel.G);
+                    writer.Write(pixel.R);
+                    writer.Write(pixel.A);
+                }
+                for (int i = quantizedFrame.Palette.Length; i < numColors; i++)
+                {
+                    writer.Write(0);
+                }
+                Console.WriteLine($"quantizedFrame.Height: {quantizedFrame.Height}");
+                Console.WriteLine($"quantizedFrame.Width: {quantizedFrame.Width}");
+
+                int valsPerByte = 8 / bitCount;
+                for (int r = 0; r < quantizedFrame.Height; r++)
+                {
+                    var rowVals = quantizedFrame.GetRowSpan(quantizedFrame.Height - 1 - r);
+                    byte b = 0;
+                    int position = valsPerByte - 1;
+                    int bytesWritten = 0;
+                    foreach (byte val in rowVals)
+                    {
+                        b |= (byte)(val << (position * bitCount));
+                        if (--position < 0)
+                        {
+                            writer.Write(b);
+                            bytesWritten++;
+                            b = 0;
+                            position = valsPerByte - 1;
+                        }
+                    }
+                    Console.WriteLine($"bytesWritten = {bytesWritten}");
+                    int extra = bytesInRow - bytesWritten;
+                    Console.WriteLine($"extra = {extra}");
+                    for (int i = 0; i < extra; i++)
+                    {
+                        writer.Write((byte)0);
+                    }
+                }
+                stream.Seek(0, SeekOrigin.Begin);
+                return stream.ToArray();
+            };
         }
 
         public static byte[] GetAndImageBytes(this Image<Rgba32> image, IconEntryDescription description)

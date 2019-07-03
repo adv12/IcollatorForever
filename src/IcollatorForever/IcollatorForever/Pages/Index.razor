@@ -6,7 +6,6 @@
 @using SixLabors.ImageSharp;
 @using SixLabors.ImageSharp.PixelFormats;
 @using SixLabors.ImageSharp.Processing;
-@using SixLabors.ImageSharp.Formats.Bmp;
 
 <!--
 Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
@@ -17,7 +16,7 @@ full text of the license.
 @if (!_showingImageOptions)
 {
     <div id="inputContainer">
-        <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon" multiple /></div>
+        <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon|image/gif|image/jpeg|image/bmp" multiple /></div>
         <div class="topButtons">
             <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
             <button id="clearButton" class="btn btn-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
@@ -90,7 +89,8 @@ full text of the license.
     <h2>@(_optionsImageName ?? "Image")</h2>
     Check the box for each combination of size and color count you want to generate from @(_optionsImageName ?? "the image").
     Then click "Generate Entries" to add them to your icon.
-    (Note: this doesn't actually work yet, so don't be disappointed when nothing gets added to your icon.)
+    (Note: This will freeze your browser for a ridiculous amount of time.
+    The Blazor team promises improved performance as the Mono .NET interpreter is optimized.)
     <div id="optionsPreviewAndTable">
         <img id="optionsImagePreview" src="@_optionsImageDataUrl" />
         <table>
@@ -98,16 +98,16 @@ full text of the license.
                 <tr>
                     <th></th>
                     <th>All</th>
-                    <th>2 Colors</th>
+                    <th>Black &amp;<br/>White</th>
                     <th>16 Colors</th>
                     <th>256 Colors</th>
                     <th>Full Color</th>
-                    <th>Full Color +<br/>Transparency</th>
+                    <th>Full Color +<br />Transparency</th>
                 </tr>
                 <tr>
                     <th>All</th>
                     <td><input type="checkbox" checked="@AllSelected" @onclick="@ToggleAll" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(2))" @onclick="@(() => ToggleBitDepthColumn(2) )" /></td>
+                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(1))" @onclick="@(() => ToggleBitDepthColumn(1) )" /></td>
                     <td><input type="checkbox" checked="@(AreAllSizePowersSelected(4))" @onclick="@(() => ToggleBitDepthColumn(4) )" /></td>
                     <td><input type="checkbox" checked="@(AreAllSizePowersSelected(8))" @onclick="@(() => ToggleBitDepthColumn(8) )" /></td>
                     <td><input type="checkbox" checked="@(AreAllSizePowersSelected(24))" @onclick="@(() => ToggleBitDepthColumn(24) )" /></td>
@@ -116,29 +116,30 @@ full text of the license.
             </thead>
             <tbody>
                 @for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
-        {
-            int size = 1 << sizePower;
-            int localSizePower = sizePower;
-                <tr data-row-size-power="@sizePower">
-                    <th>@(size)x@(size) pixels</th>
-                    <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSizePower)" @onclick="@(() => ToggleSizePowerRow(localSizePower))" /></td>
-                    <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 2)" @onclick="@(() => ToggleTypeSelection(localSizePower, 2))" /></td>
-                    <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 4)" @onclick="@(() => ToggleTypeSelection(localSizePower, 4))" /></td>
-                    <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 8)" @onclick="@(() => ToggleTypeSelection(localSizePower, 8))" /></td>
-                    <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 24)" @onclick="@(() => ToggleTypeSelection(localSizePower, 24))" /></td>
-                    <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 32)" @onclick="@(() => ToggleTypeSelection(localSizePower, 32))" /></td>
-                </tr>
-        }
+                {
+                    int size = 1 << sizePower;
+                    int localSizePower = sizePower;
+                    <tr data-row-size-power="@sizePower">
+                        <th>@(size)x@(size) pixels</th>
+                        <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSizePower)" @onclick="@(() => ToggleSizePowerRow(localSizePower))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 1)" @onclick="@(() => ToggleTypeSelection(localSizePower, 1))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 4)" @onclick="@(() => ToggleTypeSelection(localSizePower, 4))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 8)" @onclick="@(() => ToggleTypeSelection(localSizePower, 8))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 24)" @onclick="@(() => ToggleTypeSelection(localSizePower, 24))" /></td>
+                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 32)" @onclick="@(() => ToggleTypeSelection(localSizePower, 32))" /></td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
     <button id="generateButton" class="btn btn-primary" @onclick="@GenerateEntries">Generate Entries</button>
+    <button id="skipCancelImageButton" class="btn btn-primary" @onclick="@SkipCancel">Skip/Cancel</button>
 </div>
 }
 
 @code {
 
-int[] _bitDepths = new int[] { 2, 4, 8, 24, 32 };
+int[] _bitDepths = new int[] { 1, 4, 8, 24, 32 };
 
 IIconEntry _selectedEntry;
 
@@ -382,24 +383,25 @@ private async void GenerateEntries()
         int smallestDimension = Math.Min(_optionsImage.Width, _optionsImage.Height);
         Image<Rgba32> baseImage = _optionsImage.Clone(x => x.Crop(smallestDimension, smallestDimension).Resize(size, size));
         var bitDepths = _selectedTypes.Where(t => t.Item1 == sizePower).Select(t => t.Item2).Distinct().OrderBy(x => x);
-        if (bitDepths.Contains(32))
+        foreach (int bitDepth in bitDepths)
         {
             IconEntryDescription description = new IconEntryDescription(
-                size, size, 0, 0, 1, 32, -1, 0, _optionsImageName, index++);
+                    size, size, 0, 0, 1, bitDepth, -1, 0, _optionsImageName, index++);
 
             _entries.Add(baseImage.ToIcoIconEntry(description));
+            await Task.Delay(10);
         }
-        if (bitDepths.Contains(24))
-        {
-            IconEntryDescription description = new IconEntryDescription(
-                size, size, 0, 0, 1, 24, -1, 0, _optionsImageName, index++);
-
-            _entries.Add(baseImage.ToIcoIconEntry(description));
-        }
-        await Task.Delay(10);
     }
     Console.WriteLine("Generated Entries!");
     _generatingEntriesCompletionSource.SetResult(true);
+    _generatingEntriesTaskInfo = null;
+    _showingImageOptions = false;
+    StateHasChanged();
+}
+
+private void SkipCancel()
+{
+    _generatingEntriesCompletionSource.SetResult(false);
     _generatingEntriesTaskInfo = null;
     _showingImageOptions = false;
     StateHasChanged();
