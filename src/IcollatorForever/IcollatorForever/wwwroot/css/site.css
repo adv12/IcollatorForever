@@ -209,6 +209,7 @@ app {
     #genericImageOptions button {
         margin-right: 16px;
         margin-left: 0;
+        margin-bottom: 16px;
     }
 
 #optionsPreviewAndTable {
@@ -239,4 +240,10 @@ app {
 
 .loading #userInputOverlay {
     display: block;
+}
+
+#dataFormatOptions
+{
+    margin-top: 16px;
+    margin-bottom: 16px;
 }

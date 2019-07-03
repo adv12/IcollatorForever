@@ -1,4 +1,9 @@
 ﻿@page "/About"
+<!--
+Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+See license.txt in the IcollatorForever distribution or repository for the
+full text of the license.
+-->
 
 <div id="about">
     <div>
@@ -6,9 +11,8 @@
             Icollator Forever is a web-based rewrite of <a href="http://www.the-vardemans.net/andrew/software">Icollator</a>,
             a small tool for combining multiple Windows .ico files into one.  This is useful if you are still interested in the archaic task
             of generating .ico files that look good at limited bit depths or if you're just really into the .ico format and want to know all
-            the nitty gritty details of what's in your files.  By now there are plenty of other tools that will generate icons at all the
-            appropriate sizes for multiple platforms and purposes from a single high-quality image.  So maybe Icollator Forever is more about
-            me experimenting with new technology than it is about you doing something useful.
+            the nitty gritty details of what's in your files.  As a new feature, it will also allow you to generate icon entries from non-.ico
+            image files (currently supporting .jpg, .gif, and .bmp).  This feature is very slow, but it works.
         </p>
         <p>
             Icollator Forever is built using Blazor, a cool new/upcoming technology from Microsoft that allows developers to write C# code
@@ -19,7 +23,8 @@
         </p>
         <p>
             Icollator Forever is open source, and it depends on other open source software, in particular
-            <a href="https://github.com/SixLabors/ImageSharp">ImageSharp</a> from <a href="https://sixlabors.com/">SixLabors</a>.
+            <a href="https://github.com/SixLabors/ImageSharp">ImageSharp</a> from <a href="https://sixlabors.com/">SixLabors</a> and
+            Jon Skeet's <a href="https://www.nuget.org/packages/JonSkeet.MiscUtil/">MiscUtil</a>.
             And I guess it uses Twitter Bootstrap, though I don't know any further details because I just built it on whatever came
             with Microsoft's Blazor sample app.  It may use <a href="https://github.com/secana/PeNet">PeNet</a> someday soon.
         </p>

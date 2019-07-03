@@ -11,6 +11,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Quantization;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace IcollatorForever
 {
@@ -49,32 +50,32 @@ namespace IcollatorForever
             }
         }
 
-        public static IcoIconEntry ToIcoIconEntry(this Image<Rgba32> image, IconEntryDescription description)
+        public static IcoIconEntry ToIcoIconEntry(this Image<Rgba32> image, IconEntryDescription description, bool asPng = false)
         {
             switch (description.BitCount)
             {
                 case 32:
                 case 24:
-                    return image.ToIcoIconEntryFullColor(description);
+                    return image.ToIcoIconEntryFullColor(description, asPng);
                 default:
-                    return image.ToIcoIconEntryIndexedColor(description);
+                    return image.ToIcoIconEntryIndexedColor(description, asPng);
             }
         }
 
-        public static IcoIconEntry ToIcoIconEntryFullColor(this Image<Rgba32> image, IconEntryDescription description)
+        public static IcoIconEntry ToIcoIconEntryFullColor(this Image<Rgba32> image, IconEntryDescription description, bool asPng = false)
         {
-            byte[] xorImageBytes = image.GetXorImageBytesFullColor(description);
+            byte[] xorImageBytes = image.GetXorImageBytesFullColor(description, asPng);
 
-            byte[] andImageBytes = image.GetAndImageBytes(description);
+            byte[] andImageBytes = asPng ? new byte[0] : image.GetAndImageBytes(description);
 
             return GetIcoIconEntry(description, xorImageBytes, andImageBytes);
         }
 
-        public static IcoIconEntry ToIcoIconEntryIndexedColor(this Image<Rgba32> image, IconEntryDescription description)
+        public static IcoIconEntry ToIcoIconEntryIndexedColor(this Image<Rgba32> image, IconEntryDescription description, bool asPng = false)
         {
-            byte[] xorImageBytes = image.GetXorImageBytesIndexedColor(description);
+            byte[] xorImageBytes = image.GetXorImageBytesIndexedColor(description, asPng);
 
-            byte[] andImageBytes = image.GetAndImageBytes(description);
+            byte[] andImageBytes = asPng ? new byte[0] : image.GetAndImageBytes(description);
 
             return GetIcoIconEntry(description, xorImageBytes, andImageBytes);
         }
@@ -94,9 +95,24 @@ namespace IcollatorForever
             }
         }
 
-        public static byte[] GetXorImageBytesFullColor(this Image<Rgba32> image, IconEntryDescription description)
+        public static byte[] GetXorImageBytesFullColor(this Image<Rgba32> image, IconEntryDescription description, bool asPng = false)
         {
             int bytesPerPixel = description.BitCount / 8;
+
+            if (asPng)
+            {
+                PngEncoder encoder = new PngEncoder {
+                    BitDepth = PngBitDepth.Bit8,
+                    ColorType = (description.BitCount == 32 ? PngColorType.RgbWithAlpha : PngColorType.Rgb)
+                };
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    image.SaveAsPng(stream, encoder);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    return stream.ToArray();
+                }
+            }
+
             Console.WriteLine($"bytesPerPixel = {bytesPerPixel}");
             int stride = description.Width * bytesPerPixel;
             Console.WriteLine($"stride = {stride}");
@@ -120,7 +136,7 @@ namespace IcollatorForever
             return xorImageBytes;
         }
 
-        public static byte[] GetXorImageBytesIndexedColor(this Image<Rgba32> image, IconEntryDescription description)
+        public static byte[] GetXorImageBytesIndexedColor(this Image<Rgba32> image, IconEntryDescription description, bool asPng = false)
         {
             int bitCount = description.BitCount;
             int numColors = 1 << bitCount;
@@ -128,6 +144,23 @@ namespace IcollatorForever
             {
                 image = image.Clone(x => x.BlackWhite());
             }
+
+            if (asPng)
+            {
+
+                PngEncoder encoder = new PngEncoder
+                {
+                    BitDepth = (PngBitDepth)bitCount,
+                    ColorType = (PngColorType.Palette)
+                };
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    image.SaveAsPng(stream, encoder);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    return stream.ToArray();
+                }
+            }
+
             WuQuantizer quantizer = new WuQuantizer(Math.Min(255, numColors));
             var frameQuantizer = quantizer.CreateFrameQuantizer<Rgba32>(new Configuration());
             var quantizedFrame = frameQuantizer.QuantizeFrame(image.Frames[0]);
@@ -234,6 +267,30 @@ namespace IcollatorForever
             }
             bits.CopyTo(andImageBytes, 0);
             return andImageBytes;
+        }
+
+        public static bool HasTransparency(this Image<Rgba32> image)
+        {
+            if (image.Width == 0 || image.Height == 0)
+            {
+                return false;
+            }
+            Rgba32 pixel = image[0, 0];
+            if (pixel.A != 0 && pixel.A != 255)
+            {
+                return true;
+            }
+            for (int x = 0; x < image.Width; x++)
+            {
+                for (int y = 0; y < image.Height; y++)
+                {
+                    if (image[x, y].A != pixel.A)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
     }

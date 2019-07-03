@@ -19,7 +19,7 @@ full text of the license.
         <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon|image/gif|image/jpeg|image/bmp" multiple /></div>
         <div class="topButtons">
             <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
-            <button id="clearButton" class="btn btn-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
+            <button id="clearButton" class="btn btn-outline-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
             <button id="saveButton" class="btn btn-primary" onclick="saveFile()" disabled=@NoEntries>Save to .ico</button>
         </div>
     </div>
@@ -102,44 +102,62 @@ full text of the license.
                     <th>16 Colors</th>
                     <th>256 Colors</th>
                     <th>Full Color</th>
-                    <th>Full Color +<br />Transparency</th>
+                    @if (_optionsImageHasTransparency)
+                    {
+                        <th>Full Color +<br />Transparency</th>
+                    }
                 </tr>
                 <tr>
                     <th>All</th>
                     <td><input type="checkbox" checked="@AllSelected" @onclick="@ToggleAll" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(1))" @onclick="@(() => ToggleBitDepthColumn(1) )" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(4))" @onclick="@(() => ToggleBitDepthColumn(4) )" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(8))" @onclick="@(() => ToggleBitDepthColumn(8) )" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(24))" @onclick="@(() => ToggleBitDepthColumn(24) )" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizePowersSelected(32))" @onclick="@(() => ToggleBitDepthColumn(32) )" /></td>
-                </tr>
+                    <td><input type="checkbox" checked="@(AreAllSizesSelected(1))" @onclick="@(() => ToggleBitDepthColumn(1) )" /></td>
+                    <td><input type="checkbox" checked="@(AreAllSizesSelected(4))" @onclick="@(() => ToggleBitDepthColumn(4) )" /></td>
+                    <td><input type="checkbox" checked="@(AreAllSizesSelected(8))" @onclick="@(() => ToggleBitDepthColumn(8) )" /></td>
+                    <td><input type="checkbox" checked="@(AreAllSizesSelected(24))" @onclick="@(() => ToggleBitDepthColumn(24) )" /></td>
+                    @if (_optionsImageHasTransparency)
+                    {
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(32))" @onclick="@(() => ToggleBitDepthColumn(32) )" /></td>
+                    }
+                    </tr>
             </thead>
             <tbody>
-                @for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
+                @foreach (int size in _sizes)
                 {
-                    int size = 1 << sizePower;
-                    int localSizePower = sizePower;
-                    <tr data-row-size-power="@sizePower">
-                        <th>@(size)x@(size) pixels</th>
-                        <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSizePower)" @onclick="@(() => ToggleSizePowerRow(localSizePower))" /></td>
-                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 1)" @onclick="@(() => ToggleTypeSelection(localSizePower, 1))" /></td>
-                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 4)" @onclick="@(() => ToggleTypeSelection(localSizePower, 4))" /></td>
-                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 8)" @onclick="@(() => ToggleTypeSelection(localSizePower, 8))" /></td>
-                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 24)" @onclick="@(() => ToggleTypeSelection(localSizePower, 24))" /></td>
-                        <td><input type="checkbox" checked="@IsTypeSelected(localSizePower, 32)" @onclick="@(() => ToggleTypeSelection(localSizePower, 32))" /></td>
-                    </tr>
+                    if (size <= MaxSize)
+                    {
+                        int localSize = size;
+                        <tr>
+                            <th>@(size)x@(size) pixels</th>
+                            <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSize)" @onclick="@(() => ToggleSizeRow(localSize))" /></td>
+                            <td><input type="checkbox" checked="@IsTypeSelected(localSize, 1)" @onclick="@(() => ToggleTypeSelection(localSize, 1))" /></td>
+                            <td><input type="checkbox" checked="@IsTypeSelected(localSize, 4)" @onclick="@(() => ToggleTypeSelection(localSize, 4))" /></td>
+                            <td><input type="checkbox" checked="@IsTypeSelected(localSize, 8)" @onclick="@(() => ToggleTypeSelection(localSize, 8))" /></td>
+                            <td><input type="checkbox" checked="@IsTypeSelected(localSize, 24)" @onclick="@(() => ToggleTypeSelection(localSize, 24))" /></td>
+                            @if (_optionsImageHasTransparency)
+                            {
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 32)" @onclick="@(() => ToggleTypeSelection(localSize, 32))" /></td>
+                            }
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
     </div>
+    <div id="dataFormatOptions">
+        <h4>Internal data format for generated entries:</h4>
+        <label for="bmpRadio"><input type="radio" name="format" id="bmpRadio" value="bmp" checked="@(!_generateAsPng)" @onchange="@(() => _generateAsPng = false)" /> <strong>BMP</strong> (more compatible)</label> <br/>
+        <label for="pngRadio"><input type="radio" name="format" id="pngRadio" value="png" checked="@(_generateAsPng)" @onchange="@(() => _generateAsPng = true)" disabled="disabled" /> <strong>PNG</strong> (smaller files, currently broken)</label>
+    </div>
     <button id="generateButton" class="btn btn-primary" @onclick="@GenerateEntries">Generate Entries</button>
-    <button id="skipCancelImageButton" class="btn btn-primary" @onclick="@SkipCancel">Skip/Cancel</button>
+    <button id="skipCancelImageButton" class="btn btn-outline-primary" @onclick="@SkipCancel">Skip/Cancel</button>
 </div>
 }
 
 @code {
 
 int[] _bitDepths = new int[] { 1, 4, 8, 24, 32 };
+
+int[] _sizes = new int[] { 16, 24, 32, 48, 64, 128, 256 };
 
 IIconEntry _selectedEntry;
 
@@ -159,26 +177,57 @@ bool _showingImageOptions = false;
 
 TaskCompletionSource<bool> _generatingEntriesCompletionSource;
 
-TaskInfo<bool> _generatingEntriesTaskInfo;
-
 HashSet<Tuple<int, int>> _selectedTypes = new HashSet<Tuple<int, int>>();
 
 Image<Rgba32> _optionsImage;
+
+bool _optionsImageHasTransparency;
 
 string _optionsImageDataUrl;
 
 string _optionsImageName;
 
-int MaxSizePower
+bool _generateAsPng;
+
+int MaxSize
 {
     get
     {
         if (_optionsImage == null)
         {
-            return 8;
+            return 256;
         }
         int minDimension = Math.Min(_optionsImage.Height, _optionsImage.Width);
-        return Math.Min(8, minDimension);
+        return Math.Min(256, minDimension);
+    }
+}
+
+IEnumerable<int> Sizes
+{
+    get
+    {
+        int max = MaxSize;
+        foreach (int size in _sizes)
+        {
+            if (size <= max)
+            {
+                yield return size;
+            }
+        }
+    }
+}
+
+IEnumerable<int> BitDepths
+{
+    get
+    {
+        foreach (int bitDepth in _bitDepths)
+        {
+            if (_optionsImageHasTransparency || bitDepth < 32)
+            {
+                yield return bitDepth;
+            }
+        }
     }
 }
 
@@ -186,9 +235,9 @@ bool AllSelected
 {
     get
     {
-        foreach (int bitDepth in _bitDepths)
+        foreach (int bitDepth in BitDepths)
         {
-            if (!AreAllSizePowersSelected(bitDepth))
+            if (!AreAllSizesSelected(bitDepth))
             {
                 return false;
             }
@@ -205,7 +254,6 @@ private async Task<bool> GenerateFromImageOptionsAsync(string filename, byte[] b
     StateHasChanged();
     bool success = await _generatingEntriesCompletionSource.Task;
     _showingImageOptions = false;
-    _generatingEntriesTaskInfo = null;
     _generatingEntriesCompletionSource = null;
     _optionsImage = null;
     _optionsImageDataUrl = null;
@@ -239,9 +287,10 @@ public async Task<bool> AddFileAsync(string filename, string base64contents)
             Console.WriteLine("Loading image");
             _selectedTypes.Clear();
             _optionsImage = Image.Load<Rgba32>(fileBytes);
+            _optionsImageHasTransparency = _optionsImage.HasTransparency();
+            _generateAsPng = false;
             _optionsImageDataUrl = "data:image/jpeg;base64," + _optionsImage.ToBase64JpegString();
             _optionsImageName = filename;
-            _generatingEntriesTaskInfo = new TaskInfo<bool>();
             return await GenerateFromImageOptionsAsync(filename, fileBytes);
         }
         catch (Exception ex)
@@ -251,7 +300,6 @@ public async Task<bool> AddFileAsync(string filename, string base64contents)
             _optionsImage = null;
             _showingImageOptions = false;
             _generatingEntriesCompletionSource = null;
-            _generatingEntriesTaskInfo = null;
             _generatingEntriesCompletionSource?.SetResult(false);
             StateHasChanged();
             return false;
@@ -280,17 +328,17 @@ private bool TryAddIcoFile(string filename, byte[] bytes)
     return false;
 }
 
-private bool IsTypeSelected(int sizePower, int bitDepth)
+private bool IsTypeSelected(int size, int bitDepth)
 {
     return _selectedTypes.Contains(new Tuple<int, int>
-    (sizePower, bitDepth));
+    (size, bitDepth));
 }
 
-private bool AreAllBitDepthsSelected(int sizePower)
+private bool AreAllBitDepthsSelected(int size)
 {
-    foreach (int bitDepth in _bitDepths)
+    foreach (int bitDepth in BitDepths)
     {
-        if (!IsTypeSelected(sizePower, bitDepth))
+        if (!IsTypeSelected(size, bitDepth))
         {
             return false;
         }
@@ -298,11 +346,11 @@ private bool AreAllBitDepthsSelected(int sizePower)
     return true;
 }
 
-private bool AreAllSizePowersSelected(int bitDepth)
+private bool AreAllSizesSelected(int bitDepth)
 {
-    for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
+    foreach (int size in Sizes)
     {
-        if (!IsTypeSelected(sizePower, bitDepth))
+        if (!IsTypeSelected(size, bitDepth))
         {
             return false;
         }
@@ -310,10 +358,9 @@ private bool AreAllSizePowersSelected(int bitDepth)
     return true;
 }
 
-private void SetTypeSelected(int sizePower, int bitDepth, bool selected)
+private void SetTypeSelected(int size, int bitDepth, bool selected)
 {
-    var type = new Tuple<int, int>
-        (sizePower, bitDepth);
+    var type = new Tuple<int, int>(size, bitDepth);
     if (selected)
     {
         _selectedTypes.Add(type);
@@ -324,11 +371,9 @@ private void SetTypeSelected(int sizePower, int bitDepth, bool selected)
     }
 }
 
-private void ToggleTypeSelection(int sizePower, int bitDepth)
+private void ToggleTypeSelection(int size, int bitDepth)
 {
-    Tuple<int, int>
-        type = new Tuple<int, int>
-            (sizePower, bitDepth);
+    Tuple<int, int> type = new Tuple<int, int>(size, bitDepth);
     if (_selectedTypes.Contains(type))
     {
         _selectedTypes.Remove(type);
@@ -342,20 +387,20 @@ private void ToggleTypeSelection(int sizePower, int bitDepth)
 
 private void ToggleBitDepthColumn(int bitDepth)
 {
-    bool allSelected = AreAllSizePowersSelected(bitDepth);
-    for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
+    bool allSelected = AreAllSizesSelected(bitDepth);
+    foreach (int size in Sizes)
     {
-        SetTypeSelected(sizePower, bitDepth, !allSelected);
+        SetTypeSelected(size, bitDepth, !allSelected);
     }
     StateHasChanged();
 }
 
-private void ToggleSizePowerRow(int sizePower)
+private void ToggleSizeRow(int size)
 {
-    bool allSelected = AreAllBitDepthsSelected(sizePower);
-    foreach (int bitDepth in _bitDepths)
+    bool allSelected = AreAllBitDepthsSelected(size);
+    foreach (int bitDepth in BitDepths)
     {
-        SetTypeSelected(sizePower, bitDepth, !allSelected);
+        SetTypeSelected(size, bitDepth, !allSelected);
     }
     StateHasChanged();
 }
@@ -363,11 +408,11 @@ private void ToggleSizePowerRow(int sizePower)
 private void ToggleAll()
 {
     bool allSelected = AllSelected;
-    foreach (int bitDepth in _bitDepths)
+    foreach (int bitDepth in BitDepths)
     {
-        for (int sizePower = 4; sizePower <= MaxSizePower; sizePower++)
+        foreach (int size in Sizes)
         {
-            SetTypeSelected(sizePower, bitDepth, !allSelected);
+            SetTypeSelected(size, bitDepth, !allSelected);
         }
     }
     StateHasChanged();
@@ -375,14 +420,12 @@ private void ToggleAll()
 
 private async void GenerateEntries()
 {
-    var sizePowers = _selectedTypes.Select(t => t.Item1).Distinct().OrderBy(x => x);
     int index = 0;
-    foreach (int sizePower in sizePowers)
+    foreach (int size in Sizes)
     {
-        int size = 1 << sizePower;
         int smallestDimension = Math.Min(_optionsImage.Width, _optionsImage.Height);
         Image<Rgba32> baseImage = _optionsImage.Clone(x => x.Crop(smallestDimension, smallestDimension).Resize(size, size));
-        var bitDepths = _selectedTypes.Where(t => t.Item1 == sizePower).Select(t => t.Item2).Distinct().OrderBy(x => x);
+        var bitDepths = _selectedTypes.Where(t => t.Item1 == size).Select(t => t.Item2).Distinct().OrderByDescending(x => x);
         foreach (int bitDepth in bitDepths)
         {
             IconEntryDescription description = new IconEntryDescription(
@@ -394,15 +437,14 @@ private async void GenerateEntries()
     }
     Console.WriteLine("Generated Entries!");
     _generatingEntriesCompletionSource.SetResult(true);
-    _generatingEntriesTaskInfo = null;
     _showingImageOptions = false;
+    _entries = _entries.OrderBy(e => e.Description).ToList();
     StateHasChanged();
 }
 
 private void SkipCancel()
 {
     _generatingEntriesCompletionSource.SetResult(false);
-    _generatingEntriesTaskInfo = null;
     _showingImageOptions = false;
     StateHasChanged();
 }
@@ -463,4 +505,4 @@ protected override void OnInit()
     JSRuntime.InvokeAsync<object>("setDotNetIndexInstance", DotNetObjectRef.Create(this));
     base.OnInit();
 }
-        }
+}
