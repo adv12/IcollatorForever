@@ -17,5 +17,9 @@
         <PackageReference Include="Microsoft.AspNetCore.Blazor.DevServer" Version="3.0.0-preview6.19307.2" PrivateAssets="all" />
         <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0006" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="wwwroot\images\" />
+    </ItemGroup>
 
 </Project>

@@ -47,20 +47,20 @@ full text of the license.
                 </thead>
                 <tbody>
                     @for (int i = 0; i < _entries.Count; i++)
-        {
-            IIconEntry entry = _entries[i];
-            IconEntryDescription description = entry.Description;
-            string key = description.ToKey();
+                    {
+                        IIconEntry entry = _entries[i];
+                        IconEntryDescription description = entry.Description;
+                        string key = description.ToKey();
                         <tr @key="@key" onclick="select(elementIndex(this))" class="@(entry == _selectedEntry ? "selected" : "")">
                             @if (entry.HasAndImage)
-        {
+                            {
                                 <td><img src="@entry.XorDataUrl" /></td>
                                 <td><img src="@entry.AndDataUrl" /></td>
-        }
-        else
-        {
+                            }
+                            else
+                            {
                                 <td colspan="2"><img src="@entry.XorDataUrl" title="PNGs are supported but not displayed" /></td>
-        }
+                            }
                             <td>@description.SourceFileName</td>
                             <td>@description.SourceIndex</td>
                             <td>@description.Width</td>
@@ -69,7 +69,7 @@ full text of the license.
                             <td>@description.ColorCount</td>
                             <td>@description.SizeInBytes</td>
                         </tr>
-        }
+                    }
                 </tbody>
             </table>
         }
@@ -81,77 +81,87 @@ full text of the license.
     <div id="selectedEntryActions" class='bottomButtons @(NoSelection ? "" : "entrySelected")'>
         <button id="deleteButton" class="btn btn-primary" onclick="deleteSelected()" disabled=@NoSelection>Delete</button>
     </div>
-    <div id="userInputOverlay"></div>
+    <div id="loadingFileOverlay">
+        <div>Loading @(_currentLoadingFilename)...</div>
+        <img src="images/Spinner-1s-200px.gif" />
+    </div>
 }
 @if (_showingImageOptions)
 {
-<div id="genericImageOptions">
-    <h2>@(_optionsImageName ?? "Image")</h2>
-    Check the box for each combination of size and color count you want to generate from @(_optionsImageName ?? "the image").
-    Then click "Generate Entries" to add them to your icon.
-    (Note: This will freeze your browser for a ridiculous amount of time.
-    The Blazor team promises improved performance as the Mono .NET interpreter is optimized.)
-    <div id="optionsPreviewAndTable">
-        <img id="optionsImagePreview" src="@_optionsImageDataUrl" />
-        <table>
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>All</th>
-                    <th>Black &amp;<br/>White</th>
-                    <th>16 Colors</th>
-                    <th>256 Colors</th>
-                    <th>Full Color</th>
-                    @if (_optionsImageHasTransparency)
-                    {
-                        <th>Full Color +<br />Transparency</th>
-                    }
-                </tr>
-                <tr>
-                    <th>All</th>
-                    <td><input type="checkbox" checked="@AllSelected" @onclick="@ToggleAll" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizesSelected(1))" @onclick="@(() => ToggleBitDepthColumn(1) )" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizesSelected(4))" @onclick="@(() => ToggleBitDepthColumn(4) )" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizesSelected(8))" @onclick="@(() => ToggleBitDepthColumn(8) )" /></td>
-                    <td><input type="checkbox" checked="@(AreAllSizesSelected(24))" @onclick="@(() => ToggleBitDepthColumn(24) )" /></td>
-                    @if (_optionsImageHasTransparency)
-                    {
-                        <td><input type="checkbox" checked="@(AreAllSizesSelected(32))" @onclick="@(() => ToggleBitDepthColumn(32) )" /></td>
-                    }
+    <div id="genericImageOptions">
+        <h2>@(_currentLoadingFilename ?? "Image")</h2>
+        Check the box for each combination of size and color count you want to generate from @(_currentLoadingFilename ?? "the image").
+        Then click "Generate Entries" to add them to your icon.
+        (Note: This will freeze your browser for a ridiculous amount of time.
+        The Blazor team promises improved performance as the Mono .NET interpreter is optimized.)
+        <div id="optionsPreviewAndTable">
+            <img id="optionsImagePreview" src="@_optionsImageDataUrl" />
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>All</th>
+                        <th>Black &amp;<br />White</th>
+                        <th>16 Colors</th>
+                        <th>256 Colors</th>
+                        <th>Full Color</th>
+                        @if (_optionsImageHasTransparency)
+                        {
+                            <th>Full Color +<br />Transparency</th>
+                        }
                     </tr>
-            </thead>
-            <tbody>
-                @foreach (int size in _sizes)
-                {
-                    if (size <= MaxSize)
+                    <tr>
+                        <th>All</th>
+                        <td><input type="checkbox" checked="@AllSelected" @onclick="@ToggleAll" /></td>
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(1))" @onclick="@(() => ToggleBitDepthColumn(1) )" /></td>
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(4))" @onclick="@(() => ToggleBitDepthColumn(4) )" /></td>
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(8))" @onclick="@(() => ToggleBitDepthColumn(8) )" /></td>
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(24))" @onclick="@(() => ToggleBitDepthColumn(24) )" /></td>
+                        @if (_optionsImageHasTransparency)
+                        {
+                            <td><input type="checkbox" checked="@(AreAllSizesSelected(32))" @onclick="@(() => ToggleBitDepthColumn(32) )" /></td>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (int size in _sizes)
                     {
-                        int localSize = size;
-                        <tr>
-                            <th>@(size)x@(size) pixels</th>
-                            <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSize)" @onclick="@(() => ToggleSizeRow(localSize))" /></td>
-                            <td><input type="checkbox" checked="@IsTypeSelected(localSize, 1)" @onclick="@(() => ToggleTypeSelection(localSize, 1))" /></td>
-                            <td><input type="checkbox" checked="@IsTypeSelected(localSize, 4)" @onclick="@(() => ToggleTypeSelection(localSize, 4))" /></td>
-                            <td><input type="checkbox" checked="@IsTypeSelected(localSize, 8)" @onclick="@(() => ToggleTypeSelection(localSize, 8))" /></td>
-                            <td><input type="checkbox" checked="@IsTypeSelected(localSize, 24)" @onclick="@(() => ToggleTypeSelection(localSize, 24))" /></td>
-                            @if (_optionsImageHasTransparency)
-                            {
-                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 32)" @onclick="@(() => ToggleTypeSelection(localSize, 32))" /></td>
-                            }
-                        </tr>
+                        if (size <= MaxSize)
+                        {
+                            int localSize = size;
+                            <tr>
+                                <th>@(size)x@(size) pixels</th>
+                                <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSize)" @onclick="@(() => ToggleSizeRow(localSize))" /></td>
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 1)" @onclick="@(() => ToggleTypeSelection(localSize, 1))" /></td>
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 4)" @onclick="@(() => ToggleTypeSelection(localSize, 4))" /></td>
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 8)" @onclick="@(() => ToggleTypeSelection(localSize, 8))" /></td>
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 24)" @onclick="@(() => ToggleTypeSelection(localSize, 24))" /></td>
+                                @if (_optionsImageHasTransparency)
+                                {
+                                    <td><input type="checkbox" checked="@IsTypeSelected(localSize, 32)" @onclick="@(() => ToggleTypeSelection(localSize, 32))" /></td>
+                                }
+                            </tr>
+                        }
                     }
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
+        <div id="dataFormatOptions">
+            <h4>Internal data format for generated entries:</h4>
+            <label for="bmpRadio"><input type="radio" name="format" id="bmpRadio" value="bmp" checked="@(!_generateAsPng)" @onchange="@(() => _generateAsPng = false)" /> <strong>BMP</strong> (more compatible)</label> <br />
+            <label for="pngRadio"><input type="radio" name="format" id="pngRadio" value="png" checked="@(_generateAsPng)" @onchange="@(() => _generateAsPng = true)" disabled="disabled" /> <strong>PNG</strong> (smaller files, currently broken)</label>
+        </div>
+        <button id="generateButton" class="btn btn-primary" @onclick="@GenerateEntries">Generate Entries</button>
+        <button id="skipCancelImageButton" class="btn btn-outline-primary" @onclick="@SkipCancel">Skip/Cancel</button>
     </div>
-    <div id="dataFormatOptions">
-        <h4>Internal data format for generated entries:</h4>
-        <label for="bmpRadio"><input type="radio" name="format" id="bmpRadio" value="bmp" checked="@(!_generateAsPng)" @onchange="@(() => _generateAsPng = false)" /> <strong>BMP</strong> (more compatible)</label> <br/>
-        <label for="pngRadio"><input type="radio" name="format" id="pngRadio" value="png" checked="@(_generateAsPng)" @onchange="@(() => _generateAsPng = true)" disabled="disabled" /> <strong>PNG</strong> (smaller files, currently broken)</label>
+
+    <div id="generatingEntriesOverlay" class="@(_generatingEntries ? "generatingEntries" : "")">
+        <div>Generating entries from @(_currentLoadingFilename)...</div>
+        <img src="images/Spinner-1s-200px.gif" />
+        <div>@(_currentEntryGenerationDescription)</div>
     </div>
-    <button id="generateButton" class="btn btn-primary" @onclick="@GenerateEntries">Generate Entries</button>
-    <button id="skipCancelImageButton" class="btn btn-outline-primary" @onclick="@SkipCancel">Skip/Cancel</button>
-</div>
 }
+
 
 @code {
 
@@ -181,11 +191,15 @@ HashSet<Tuple<int, int>> _selectedTypes = new HashSet<Tuple<int, int>>();
 
 Image<Rgba32> _optionsImage;
 
+string _currentEntryGenerationDescription;
+
 bool _optionsImageHasTransparency;
 
 string _optionsImageDataUrl;
 
-string _optionsImageName;
+string _currentLoadingFilename;
+
+bool _generatingEntries;
 
 bool _generateAsPng;
 
@@ -257,7 +271,7 @@ private async Task<bool> GenerateFromImageOptionsAsync(string filename, byte[] b
     _generatingEntriesCompletionSource = null;
     _optionsImage = null;
     _optionsImageDataUrl = null;
-    _optionsImageName = null;
+    _currentLoadingFilename = null;
     StateHasChanged();
     return await Task.FromResult(success);
 }
@@ -268,6 +282,12 @@ public async Task<bool> AddFileAsync(string filename, string base64contents)
     byte[] fileBytes = Convert.FromBase64String(base64contents);
 
     string extension = System.IO.Path.GetExtension(filename).ToLower();
+
+    _currentLoadingFilename = filename;
+
+    StateHasChanged();
+
+    await Task.Delay(10);
 
     bool success = false;
 
@@ -286,17 +306,17 @@ public async Task<bool> AddFileAsync(string filename, string base64contents)
         {
             Console.WriteLine("Loading image");
             _selectedTypes.Clear();
+            StateHasChanged();
             _optionsImage = Image.Load<Rgba32>(fileBytes);
             _optionsImageHasTransparency = _optionsImage.HasTransparency();
             _generateAsPng = false;
             _optionsImageDataUrl = "data:image/jpeg;base64," + _optionsImage.ToBase64JpegString();
-            _optionsImageName = filename;
             return await GenerateFromImageOptionsAsync(filename, fileBytes);
         }
         catch (Exception ex)
         {
             Console.WriteLine("exception loading image: " + ex.ToString());
-            _optionsImageName = null;
+            _currentLoadingFilename = null;
             _optionsImage = null;
             _showingImageOptions = false;
             _generatingEntriesCompletionSource = null;
@@ -421,6 +441,7 @@ private void ToggleAll()
 private async void GenerateEntries()
 {
     int index = 0;
+    _generatingEntries = true;
     foreach (int size in Sizes)
     {
         int smallestDimension = Math.Min(_optionsImage.Width, _optionsImage.Height);
@@ -428,18 +449,48 @@ private async void GenerateEntries()
         var bitDepths = _selectedTypes.Where(t => t.Item1 == size).Select(t => t.Item2).Distinct().OrderByDescending(x => x);
         foreach (int bitDepth in bitDepths)
         {
+            if (!_generatingEntries)
+            {
+                break;
+            }
             IconEntryDescription description = new IconEntryDescription(
-                    size, size, 0, 0, 1, bitDepth, -1, 0, _optionsImageName, index++);
-
-            _entries.Add(baseImage.ToIcoIconEntry(description));
+                    size, size, 0, 0, 1, bitDepth, -1, 0, _currentLoadingFilename, index++);
+            _currentEntryGenerationDescription = $"Generating {size}x{size}, {GetNumberOfColorString(bitDepth)}";
+            StateHasChanged();
             await Task.Delay(10);
+            _entries.Add(baseImage.ToIcoIconEntry(description));
+        }
+        if (!_generatingEntries)
+        {
+            break;
         }
     }
+    _generatingEntries = false;
     Console.WriteLine("Generated Entries!");
     _generatingEntriesCompletionSource.SetResult(true);
     _showingImageOptions = false;
     _entries = _entries.OrderBy(e => e.Description).ToList();
     StateHasChanged();
+}
+
+private string GetNumberOfColorString(int bitDepth)
+{
+    if (bitDepth == 1)
+    {
+        return "Black & White";
+    }
+    else if (bitDepth == 24)
+    {
+        return "Full Color";
+    }
+    else if (bitDepth == 32)
+    {
+        return "Full Color + Transparency";
+    }
+    else
+    {
+        return (1 << bitDepth) + " Colors";
+    }
 }
 
 private void SkipCancel()
