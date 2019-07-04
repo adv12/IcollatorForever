@@ -3,6 +3,7 @@
 @using System.Linq;
 @using System.Threading;
 @using System.IO;
+@using System.Text.RegularExpressions;
 @using SixLabors.ImageSharp;
 @using SixLabors.ImageSharp.PixelFormats;
 @using SixLabors.ImageSharp.Processing;
@@ -549,6 +550,20 @@ public void Select(int index)
         }
     }
     StateHasChanged();
+}
+
+[JSInvokable("GetOutputFilename")]
+public string GetOutputFilename()
+{
+    SortedSet<string> entryNames = new SortedSet<string>();
+    foreach (IIconEntry entry in _entries)
+    {
+        string name = Path.GetFileNameWithoutExtension(entry.Description.SourceFileName);
+        // try to strip off trailing size-specific substrings (so e.g. "foo_16x16@3x" => "foo")
+        name = Regex.Replace(name, @"(^\w*?)[_ \(\)@\d][_ \(\)@\dxX]*$", @"$1");
+        entryNames.Add(name);
+    }
+    return String.Join("_", entryNames.ToArray()) + ".ico";
 }
 
 protected override void OnInit()

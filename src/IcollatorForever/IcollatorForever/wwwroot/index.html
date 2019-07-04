@@ -121,13 +121,14 @@ full text of the license.
 
         function saveFile() {
             var base64 = dotNetInstance.invokeMethod('GenerateBase64IcoString');
+            var outputFilename = dotNetInstance.invokeMethod('GetOutputFilename');
             var byteChars = atob(base64);
             const byteNumbers = new Array(byteChars.length);
             for (let i = 0; i < byteChars.length; i++) {
                 byteNumbers[i] = byteChars.charCodeAt(i);
             }
             const bytes = new Uint8Array(byteNumbers);
-            download(bytes, "icon.ico", "image/x-icon");
+            download(bytes, outputFilename, "image/x-icon");
         }
 
         async function handleDrop(e) {
