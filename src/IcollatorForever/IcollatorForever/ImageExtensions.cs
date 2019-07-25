@@ -66,18 +66,33 @@ namespace IcollatorForever
         {
             byte[] xorImageBytes = image.GetXorImageBytesFullColor(description, asPng);
 
-            byte[] andImageBytes = asPng ? new byte[0] : image.GetAndImageBytes(description);
+            if (asPng)
+            {
+                description.OverwriteSizeInBytes(xorImageBytes.Length);
+                return new IcoIconEntry(description, xorImageBytes);
+            }
+            else
+            {
+                byte[] andImageBytes = image.GetAndImageBytes(description);
+                return GetIcoIconEntry(description, xorImageBytes, andImageBytes);
+            }
 
-            return GetIcoIconEntry(description, xorImageBytes, andImageBytes);
         }
 
         public static IcoIconEntry ToIcoIconEntryIndexedColor(this Image<Rgba32> image, IconEntryDescription description, bool asPng = false)
         {
             byte[] xorImageBytes = image.GetXorImageBytesIndexedColor(description, asPng);
 
-            byte[] andImageBytes = asPng ? new byte[0] : image.GetAndImageBytes(description);
-
-            return GetIcoIconEntry(description, xorImageBytes, andImageBytes);
+            if (asPng)
+            {
+                description.OverwriteSizeInBytes(xorImageBytes.Length);
+                return new IcoIconEntry(description, xorImageBytes);
+            }
+            else
+            {
+                byte[] andImageBytes = image.GetAndImageBytes(description);
+                return GetIcoIconEntry(description, xorImageBytes, andImageBytes);
+            }
         }
 
         private static IcoIconEntry GetIcoIconEntry(IconEntryDescription description, byte[] xorImageBytes, byte[] andImageBytes)

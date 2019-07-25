@@ -150,7 +150,7 @@ full text of the license.
         <div id="dataFormatOptions">
             <h4>Internal data format for generated entries:</h4>
             <label for="bmpRadio"><input type="radio" name="format" id="bmpRadio" value="bmp" checked="@(!_generateAsPng)" @onchange="@(() => _generateAsPng = false)" /> <strong>BMP</strong> (more compatible)</label> <br />
-            <label for="pngRadio"><input type="radio" name="format" id="pngRadio" value="png" checked="@(_generateAsPng)" @onchange="@(() => _generateAsPng = true)" disabled="disabled" /> <strong>PNG</strong> (smaller files, currently broken)</label>
+            <label for="pngRadio"><input type="radio" name="format" id="pngRadio" value="png" checked="@(_generateAsPng)" @onchange="@(() => _generateAsPng = true)" /> <strong>PNG</strong> (smaller files)</label>
         </div>
         <button id="generateButton" class="btn btn-primary" @onclick="@GenerateEntries">Generate Entries</button>
         <button id="skipCancelImageButton" class="btn btn-outline-primary" @onclick="@SkipCancel">Skip/Cancel</button>
@@ -311,7 +311,7 @@ public async Task<bool> AddFileAsync(string filename, string base64contents)
             _optionsImage = Image.Load<Rgba32>(fileBytes);
             _optionsImageHasTransparency = _optionsImage.HasTransparency();
             _generateAsPng = false;
-            _optionsImageDataUrl = "data:image/jpeg;base64," + _optionsImage.ToBase64JpegString();
+            _optionsImageDataUrl = "data:image/png;base64," + _optionsImage.ToBase64PngString();
             return await GenerateFromImageOptionsAsync(filename, fileBytes);
         }
         catch (Exception ex)
@@ -459,7 +459,7 @@ private async void GenerateEntries()
             _currentEntryGenerationDescription = $"Generating {size}x{size}, {GetNumberOfColorString(bitDepth)}";
             StateHasChanged();
             await Task.Delay(10);
-            _entries.Add(baseImage.ToIcoIconEntry(description));
+            _entries.Add(baseImage.ToIcoIconEntry(description, _generateAsPng));
         }
         if (!_generatingEntries)
         {

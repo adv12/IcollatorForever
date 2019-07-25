@@ -47,9 +47,7 @@ namespace IcollatorForever
                 {
                     if (IsPng)
                     {
-                        // temporary until the mono team fixes the DEFLATE bug so I can read PNGs
-                        _xorImage = new Image<Rgba32>(Description.Width, Description.Height);
-                        //_xorImage = Image.Load(Data);
+                        _xorImage = Image.Load(Data);
                     }
                     else
                     {
@@ -85,14 +83,7 @@ namespace IcollatorForever
             {
                 if (_xorDataUrl == null)
                 {
-                    if (Description.BitCount <= 8)
-                    {
-                        _xorDataUrl = "data:image/gif;base64," + XorImage.ToBase64GifString();
-                    }
-                    else
-                    {
-                        _xorDataUrl = "data:image/jpeg;base64," + XorImage.ToBase64JpegString();
-                    }
+                    _xorDataUrl = "data:image/png;base64," + XorImage.ToBase64PngString();
                 }
                 return _xorDataUrl;
             }
@@ -104,7 +95,7 @@ namespace IcollatorForever
             {
                 if (_andDataUrl == null)
                 {
-                    _andDataUrl = "data:image/gif;base64," + AndImage.ToBase64GifString();
+                    _andDataUrl = "data:image/png;base64," + AndImage.ToBase64PngString();
                 }
                 return _andDataUrl;
             }
@@ -162,7 +153,7 @@ namespace IcollatorForever
 
         public void ReadPng()
         {
-            // temporary until the mono team fixes the DEFLATE bug so I can read PNGs
+            // Do I need to do anything here?  Or is it replaced by lazy loading _xorImage?
         }
 
         public void ReadBmp()
