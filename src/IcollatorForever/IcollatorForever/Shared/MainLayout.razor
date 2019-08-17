@@ -31,9 +31,9 @@ full text of the license.
         Console.WriteLine("navigated back");
     }
 
-    protected override void OnInit()
+    protected override void OnInitialized()
     {
         JSRuntime.InvokeAsync<object>("setDotNetLayoutInstance", DotNetObjectRef.Create(this));
-        base.OnInit();
+        base.OnInitialized();
     }
 }

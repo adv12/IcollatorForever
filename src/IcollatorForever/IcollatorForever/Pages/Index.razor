@@ -566,9 +566,9 @@ public string GetOutputFilename()
     return String.Join("_", entryNames.ToArray()) + ".ico";
 }
 
-protected override void OnInit()
+protected override void OnInitialized()
 {
     JSRuntime.InvokeAsync<object>("setDotNetIndexInstance", DotNetObjectRef.Create(this));
-    base.OnInit();
+    base.OnInitialized();
 }
 }
