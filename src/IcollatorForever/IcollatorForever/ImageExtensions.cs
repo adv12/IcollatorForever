@@ -197,7 +197,7 @@ namespace IcollatorForever
             using (MemoryStream stream  = new MemoryStream())
             using (EndianBinaryWriter writer = new EndianBinaryWriter(EndianBitConverter.Little, stream))
             {
-                foreach (Rgba32 pixel in quantizedFrame.Palette)
+                foreach (Rgba32 pixel in quantizedFrame.Palette.ToArray())
                 {
                     writer.Write(pixel.B);
                     writer.Write(pixel.G);

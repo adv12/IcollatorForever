@@ -113,7 +113,7 @@ full text of the license.
                     </tr>
                     <tr>
                         <th>All</th>
-                        <td><input type="checkbox" checked="@AllSelected" @onclick="@ToggleAll" /></td>
+                        <td><input type="checkbox" checked="@AllSelected" @onclick="ToggleAll" /></td>
                         <td><input type="checkbox" checked="@(AreAllSizesSelected(1))" @onclick="@(() => ToggleBitDepthColumn(1) )" /></td>
                         <td><input type="checkbox" checked="@(AreAllSizesSelected(4))" @onclick="@(() => ToggleBitDepthColumn(4) )" /></td>
                         <td><input type="checkbox" checked="@(AreAllSizesSelected(8))" @onclick="@(() => ToggleBitDepthColumn(8) )" /></td>
@@ -568,7 +568,7 @@ public string GetOutputFilename()
 
 protected override void OnInitialized()
 {
-    JSRuntime.InvokeAsync<object>("setDotNetIndexInstance", DotNetObjectRef.Create(this));
+    JSRuntime.InvokeAsync<object>("setDotNetIndexInstance", DotNetObjectReference.Create(this));
     base.OnInitialized();
 }
 }
