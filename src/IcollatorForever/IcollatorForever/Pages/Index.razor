@@ -9,7 +9,7 @@
 @using SixLabors.ImageSharp.Processing;
 
 <!--
-Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+Copyright (c) 2025 Andrew Vardeman.  Published under the MIT license.
 See license.txt in the IcollatorForever distribution or repository for the
 full text of the license.
 -->
@@ -17,15 +17,17 @@ full text of the license.
 @if (!_showingImageOptions)
 {
     <div id="inputContainer">
-        <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon|image/gif|image/jpeg|image/bmp" multiple /></div>
+        <div><input id="mainFileInput" class="fileInput" type="file" accept="image/x-icon|image/gif|image/jpeg|image/bmp"
+                multiple /></div>
         <div class="topButtons">
             <label id="chooseFileLabel" class="fileInputLabel btn btn-primary" for="mainFileInput">Add File(s)...</label>
-            <button id="clearButton" class="btn btn-outline-primary" onclick="clearTable()" disabled=@NoEntries>Clear</button>
+            <button id="clearButton" class="btn btn-outline-primary" onclick="clearTable()"
+                disabled=@NoEntries>Clear</button>
             <button id="saveButton" class="btn btn-primary" onclick="saveFile()" disabled=@NoEntries>Save to .ico</button>
         </div>
     </div>
     <div id="iconTableContainer" ondrop="handleDrop(event); return false;" ondragover="return handleDragOver(event);"
-         ondragenter="return handleDragEnter(event);" ondragleave="return handleDragLeave(event);">
+        ondragenter="return handleDragEnter(event);" ondragleave="return handleDragLeave(event);">
         @if (_entries.Count == 0)
         {
             <div id="dropTarget">Drag and drop files here to add them to your icon.</div>
@@ -90,23 +92,28 @@ full text of the license.
 @if (_showingImageOptions)
 {
     <div id="genericImageOptions">
-        <h2>@(_currentLoadingFilename ?? "Image")</h2>
-        Check the box for each combination of size and color count you want to generate from @(_currentLoadingFilename ?? "the image").
-        Then click "Generate Entries" to add them to your icon.
-        (Note: This will freeze your browser for a ridiculous amount of time.
-        The Blazor team promises improved performance as the Mono .NET interpreter is optimized.)
-        <div id="optionsPreviewAndTable">
-            <img id="optionsImagePreview" src="@_optionsImageDataUrl" />
-            <table>
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>All</th>
-                        <th>Black &amp;<br />White</th>
-                        <th>16 Colors</th>
-                        <th>256 Colors</th>
-                        <th>Full Color</th>
-                        @if (_optionsImageHasTransparency)
+        <h2>@(_currentLoadingFilename ?? "Image") (@(_fileNumber) of @(_fileCount))</h2>
+        <p>
+        Check the box for each combination of size and color count you want to add from @(_currentLoadingFilename ??
+            "the image").
+    Then click "Generate Entries" to add them to your icon.
+    This will freeze your browser for a ridiculous amount of time, so be patient.
+    </p>
+    <p>
+        (If you're providing individual images at all the sizes and color counts you want, just select the appropriate size and color count for this image.)
+    </p>
+    <div id="optionsPreviewAndTable">
+        <img id="optionsImagePreview" src="@_optionsImageDataUrl" />
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>All</th>
+                    <th>Black &amp;<br />White</th>
+                    <th>16 Colors</th>
+                    <th>256 Colors</th>
+                    <th>Full Color</th>
+                    @if (_optionsImageHasTransparency)
                         {
                             <th>Full Color +<br />Transparency</th>
                         }
@@ -114,13 +121,18 @@ full text of the license.
                     <tr>
                         <th>All</th>
                         <td><input type="checkbox" checked="@AllSelected" @onclick="ToggleAll" /></td>
-                        <td><input type="checkbox" checked="@(AreAllSizesSelected(1))" @onclick="@(() => ToggleBitDepthColumn(1) )" /></td>
-                        <td><input type="checkbox" checked="@(AreAllSizesSelected(4))" @onclick="@(() => ToggleBitDepthColumn(4) )" /></td>
-                        <td><input type="checkbox" checked="@(AreAllSizesSelected(8))" @onclick="@(() => ToggleBitDepthColumn(8) )" /></td>
-                        <td><input type="checkbox" checked="@(AreAllSizesSelected(24))" @onclick="@(() => ToggleBitDepthColumn(24) )" /></td>
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(1))"
+                                @onclick="@(() => ToggleBitDepthColumn(1))" /></td>
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(4))"
+                                @onclick="@(() => ToggleBitDepthColumn(4))" /></td>
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(8))"
+                                @onclick="@(() => ToggleBitDepthColumn(8))" /></td>
+                        <td><input type="checkbox" checked="@(AreAllSizesSelected(24))"
+                                @onclick="@(() => ToggleBitDepthColumn(24))" /></td>
                         @if (_optionsImageHasTransparency)
                         {
-                            <td><input type="checkbox" checked="@(AreAllSizesSelected(32))" @onclick="@(() => ToggleBitDepthColumn(32) )" /></td>
+                            <td><input type="checkbox" checked="@(AreAllSizesSelected(32))"
+                                    @onclick="@(() => ToggleBitDepthColumn(32))" /></td>
                         }
                     </tr>
                 </thead>
@@ -132,14 +144,20 @@ full text of the license.
                             int localSize = size;
                             <tr>
                                 <th>@(size)x@(size) pixels</th>
-                                <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSize)" @onclick="@(() => ToggleSizeRow(localSize))" /></td>
-                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 1)" @onclick="@(() => ToggleTypeSelection(localSize, 1))" /></td>
-                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 4)" @onclick="@(() => ToggleTypeSelection(localSize, 4))" /></td>
-                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 8)" @onclick="@(() => ToggleTypeSelection(localSize, 8))" /></td>
-                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 24)" @onclick="@(() => ToggleTypeSelection(localSize, 24))" /></td>
+                                <td><input type="checkbox" checked="@AreAllBitDepthsSelected(localSize)"
+                                        @onclick="@(() => ToggleSizeRow(localSize))" /></td>
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 1)"
+                                        @onclick="@(() => ToggleTypeSelection(localSize, 1))" /></td>
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 4)"
+                                        @onclick="@(() => ToggleTypeSelection(localSize, 4))" /></td>
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 8)"
+                                        @onclick="@(() => ToggleTypeSelection(localSize, 8))" /></td>
+                                <td><input type="checkbox" checked="@IsTypeSelected(localSize, 24)"
+                                        @onclick="@(() => ToggleTypeSelection(localSize, 24))" /></td>
                                 @if (_optionsImageHasTransparency)
                                 {
-                                    <td><input type="checkbox" checked="@IsTypeSelected(localSize, 32)" @onclick="@(() => ToggleTypeSelection(localSize, 32))" /></td>
+                                    <td><input type="checkbox" checked="@IsTypeSelected(localSize, 32)"
+                                            @onclick="@(() => ToggleTypeSelection(localSize, 32))" /></td>
                                 }
                             </tr>
                         }
@@ -149,8 +167,10 @@ full text of the license.
         </div>
         <div id="dataFormatOptions">
             <h4>Internal data format for generated entries:</h4>
-            <label for="bmpRadio"><input type="radio" name="format" id="bmpRadio" value="bmp" checked="@(!_generateAsPng)" @onchange="@(() => _generateAsPng = false)" /> <strong>BMP</strong> (more compatible)</label> <br />
-            <label for="pngRadio"><input type="radio" name="format" id="pngRadio" value="png" checked="@(_generateAsPng)" @onchange="@(() => _generateAsPng = true)" /> <strong>PNG</strong> (smaller files)</label>
+            <label for="bmpRadio"><input type="radio" name="format" id="bmpRadio" value="bmp" checked="@(!_generateAsPng)"
+                    @onchange="@(() => _generateAsPng = false)" /> <strong>BMP</strong> (more compatible)</label> <br />
+            <label for="pngRadio"><input type="radio" name="format" id="pngRadio" value="png" checked="@(_generateAsPng)"
+                    @onchange="@(() => _generateAsPng = true)" /> <strong>PNG</strong> (smaller files)</label>
         </div>
         <button id="generateButton" class="btn btn-primary" @onclick="@GenerateEntries">Generate Entries</button>
         <button id="skipCancelImageButton" class="btn btn-outline-primary" @onclick="@SkipCancel">Skip/Cancel</button>
@@ -166,409 +186,444 @@ full text of the license.
 
 @code {
 
-int[] _bitDepths = new int[] { 1, 4, 8, 24, 32 };
+        int[] _bitDepths = new int[] { 1, 4, 8, 24, 32 };
 
-int[] _sizes = new int[] { 16, 24, 32, 48, 64, 128, 256 };
+        int[] _sizes = new int[] { 16, 24, 32, 48, 64, 128, 256 };
 
-IIconEntry _selectedEntry;
+        IIconEntry? _selectedEntry;
 
-bool NoEntries => _entries.Count == 0;
+        bool NoEntries => _entries.Count == 0;
 
-bool NoSelection => _selectedEntry == null;
+        bool NoSelection => _selectedEntry == null;
 
-byte[] _currentFileContents;
+        List<IIconEntry> _entries = new List<IIconEntry>();
 
-Timer _timer;
+        List<Exception> _exceptions = new List<Exception>();
 
-List<IIconEntry> _entries = new List<IIconEntry>();
+        bool _showingImageOptions = false;
 
-List<Exception> _exceptions = new List<Exception>();
+        TaskCompletionSource<bool>? _generatingEntriesCompletionSource;
 
-bool _showingImageOptions = false;
+        HashSet<Tuple<int, int>> _selectedTypes = new HashSet<Tuple<int, int>>();
 
-TaskCompletionSource<bool> _generatingEntriesCompletionSource;
+        Image? _optionsImage;
 
-HashSet<Tuple<int, int>> _selectedTypes = new HashSet<Tuple<int, int>>();
+        string? _currentEntryGenerationDescription;
 
-Image<Rgba32> _optionsImage;
+        bool _optionsImageHasTransparency;
 
-string _currentEntryGenerationDescription;
+        string? _optionsImageDataUrl;
 
-bool _optionsImageHasTransparency;
+        string? _currentLoadingFilename;
 
-string _optionsImageDataUrl;
+        bool _generatingEntries;
 
-string _currentLoadingFilename;
+        bool _generateAsPng;
 
-bool _generatingEntries;
+        int _fileNumber;
 
-bool _generateAsPng;
+        int _fileCount;
 
-int MaxSize
-{
-    get
+        int MaxSize
     {
-        if (_optionsImage == null)
-        {
-            return 256;
+            get
+    {
+                if (_optionsImage == null)
+                {
+                    return 256;
+                }
+                int minDimension = Math.Min(_optionsImage.Height, _optionsImage.Width);
+                return Math.Min(256, minDimension);
+            }
         }
-        int minDimension = Math.Min(_optionsImage.Height, _optionsImage.Width);
-        return Math.Min(256, minDimension);
-    }
-}
 
-IEnumerable<int> Sizes
-{
-    get
+        IEnumerable<int> Sizes
     {
-        int max = MaxSize;
-        foreach (int size in _sizes)
+            get
+    {
+                int max = MaxSize;
+                foreach (int size in _sizes)
+                {
+                    if (size <= max)
+                    {
+                        yield return size;
+                    }
+                }
+            }
+        }
+
+        IEnumerable<int> BitDepths
+    {
+            get
+    {
+                foreach (int bitDepth in _bitDepths)
+                {
+                    if (_optionsImageHasTransparency || bitDepth < 32)
+                    {
+                        yield return bitDepth;
+                    }
+                }
+            }
+        }
+
+        bool AllSelected
+    {
+            get
+    {
+                foreach (int bitDepth in BitDepths)
+                {
+                    if (!AreAllSizesSelected(bitDepth))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+    private async Task<bool> GenerateFromImageOptionsAsync(string filename, byte[] bytes)
+    {
+        _generatingEntriesCompletionSource = new TaskCompletionSource<bool>();
+        _showingImageOptions = true;
+        Console.WriteLine("marking state changed");
+        StateHasChanged();
+        bool success = await _generatingEntriesCompletionSource.Task;
+        _showingImageOptions = false;
+        _generatingEntriesCompletionSource = null;
+        _optionsImage = null;
+        _optionsImageDataUrl = null;
+        _currentLoadingFilename = null;
+        StateHasChanged();
+        return await Task.FromResult(success);
+    }
+
+    [JSInvokable("AddFileAsync")]
+    public async Task<bool> AddFileAsync(string filename, string base64contents, int fileNumber, int fileCount)
+    {
+        byte[] fileBytes = Convert.FromBase64String(base64contents);
+
+        string extension = System.IO.Path.GetExtension(filename).ToLower();
+
+        _currentLoadingFilename = filename;
+
+        _fileNumber = fileNumber;
+        _fileCount = fileCount;
+
+        StateHasChanged();
+
+        await Task.Delay(10);
+
+        bool success = false;
+
+        if (extension == null || extension.Length == 0 || extension == ".ico")
         {
-            if (size <= max)
+            success = TryAddIcoFile(filename, fileBytes);
+        }
+        if (success)
+        {
+            StateHasChanged();
+            return await Task.FromResult(true);
+        }
+        else
+        {
+            try
             {
-                yield return size;
+                Console.WriteLine("Loading image");
+                _selectedTypes.Clear();
+                StateHasChanged();
+                _optionsImage = Image.Load(fileBytes);
+                Image<Rgba32>? options32 = _optionsImage as Image<Rgba32>;
+                var imageInfo = Image.Identify(fileBytes);
+                int bitCount = _optionsImage.PixelType.BitsPerPixel;
+                if (imageInfo != null)
+                {
+                    bitCount = imageInfo.PixelType.BitsPerPixel;
+                }
+                _optionsImageHasTransparency = options32 != null && options32.HasTransparency();
+                _generateAsPng = false;
+                if (_sizes.Contains(_optionsImage.Width) && _optionsImage.Width == _optionsImage.Height)
+                {
+                    switch (bitCount)
+                    {
+                        case 1:
+                            _selectedTypes.Add(new Tuple<int, int>(_optionsImage.Width, 1));
+                            break;
+                        case 4:
+                            _selectedTypes.Add(new Tuple<int, int>(_optionsImage.Width, 4));
+                            break;
+                        case 8:
+                            _selectedTypes.Add(new Tuple<int, int>(_optionsImage.Width, 8));
+                            break;
+                        case 24:
+                            _selectedTypes.Add(new Tuple<int, int>(_optionsImage.Width, 24));
+                            break;
+                        case 32:
+                            _selectedTypes.Add(new Tuple<int, int>(_optionsImage.Width, 32));
+                            break;
+                    }
+                }
+                _optionsImageDataUrl = "data:image/png;base64," + _optionsImage.ToBase64PngString();
+                return await GenerateFromImageOptionsAsync(filename, fileBytes);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("exception loading image: " + ex.ToString());
+                _currentLoadingFilename = null;
+                _optionsImage = null;
+                _showingImageOptions = false;
+                _generatingEntriesCompletionSource = null;
+                _generatingEntriesCompletionSource?.SetResult(false);
+                StateHasChanged();
+                return false;
             }
         }
     }
-}
 
-IEnumerable<int> BitDepths
-{
-    get
+    private bool TryAddIcoFile(string filename, byte[] bytes)
     {
-        foreach (int bitDepth in _bitDepths)
+        try
         {
-            if (_optionsImageHasTransparency || bitDepth < 32)
+            using (MemoryStream stream = new MemoryStream(bytes))
             {
-                yield return bitDepth;
+                Icon icon = new Icon(filename, stream);
+                _entries.AddRange(icon.Entries);
+                _entries = _entries.OrderBy(e => e.Description).ToList();
+                StateHasChanged();
             }
+            return true;
         }
+        catch (Exception e)
+        {
+            _exceptions.Add(e);
+            StateHasChanged();
+        }
+        return false;
     }
-}
 
-bool AllSelected
-{
-    get
+    private bool IsTypeSelected(int size, int bitDepth)
+    {
+        return _selectedTypes.Contains(new Tuple<int, int>
+        (size, bitDepth));
+    }
+
+    private bool AreAllBitDepthsSelected(int size)
     {
         foreach (int bitDepth in BitDepths)
         {
-            if (!AreAllSizesSelected(bitDepth))
+            if (!IsTypeSelected(size, bitDepth))
             {
                 return false;
             }
         }
         return true;
     }
-}
 
-private async Task<bool> GenerateFromImageOptionsAsync(string filename, byte[] bytes)
-{
-    _generatingEntriesCompletionSource = new TaskCompletionSource<bool>();
-    _showingImageOptions = true;
-    Console.WriteLine("marking state changed");
-    StateHasChanged();
-    bool success = await _generatingEntriesCompletionSource.Task;
-    _showingImageOptions = false;
-    _generatingEntriesCompletionSource = null;
-    _optionsImage = null;
-    _optionsImageDataUrl = null;
-    _currentLoadingFilename = null;
-    StateHasChanged();
-    return await Task.FromResult(success);
-}
-
-[JSInvokable("AddFileAsync")]
-public async Task<bool> AddFileAsync(string filename, string base64contents)
-{
-    byte[] fileBytes = Convert.FromBase64String(base64contents);
-
-    string extension = System.IO.Path.GetExtension(filename).ToLower();
-
-    _currentLoadingFilename = filename;
-
-    StateHasChanged();
-
-    await Task.Delay(10);
-
-    bool success = false;
-
-    if (extension == null || extension.Length == 0 || extension == ".ico")
+    private bool AreAllSizesSelected(int bitDepth)
     {
-        success = TryAddIcoFile(filename, fileBytes);
-    }
-    if (success)
-    {
-        StateHasChanged();
-        return await Task.FromResult(true);
-    }
-    else
-    {
-        try
+        foreach (int size in Sizes)
         {
-            Console.WriteLine("Loading image");
-            _selectedTypes.Clear();
-            StateHasChanged();
-            _optionsImage = Image.Load<Rgba32>(fileBytes);
-            _optionsImageHasTransparency = _optionsImage.HasTransparency();
-            _generateAsPng = false;
-            _optionsImageDataUrl = "data:image/png;base64," + _optionsImage.ToBase64PngString();
-            return await GenerateFromImageOptionsAsync(filename, fileBytes);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("exception loading image: " + ex.ToString());
-            _currentLoadingFilename = null;
-            _optionsImage = null;
-            _showingImageOptions = false;
-            _generatingEntriesCompletionSource = null;
-            _generatingEntriesCompletionSource?.SetResult(false);
-            StateHasChanged();
-            return false;
-        }
-    }
-}
-
-private bool TryAddIcoFile(string filename, byte[] bytes)
-{
-    try
-    {
-        using (MemoryStream stream = new MemoryStream(bytes))
-        {
-            Icon icon = new Icon(filename, stream);
-            _entries.AddRange(icon.Entries);
-            _entries = _entries.OrderBy(e => e.Description).ToList();
-            StateHasChanged();
+            if (!IsTypeSelected(size, bitDepth))
+            {
+                return false;
+            }
         }
         return true;
     }
-    catch (Exception e)
+
+    private void SetTypeSelected(int size, int bitDepth, bool selected)
     {
-        _exceptions.Add(e);
+        var type = new Tuple<int, int>(size, bitDepth);
+        if (selected)
+        {
+            _selectedTypes.Add(type);
+        }
+        else
+        {
+            _selectedTypes.Remove(type);
+        }
+    }
+
+    private void ToggleTypeSelection(int size, int bitDepth)
+    {
+        Tuple<int, int> type = new Tuple<int, int>(size, bitDepth);
+        if (_selectedTypes.Contains(type))
+        {
+            _selectedTypes.Remove(type);
+        }
+        else
+        {
+            _selectedTypes.Add(type);
+        }
         StateHasChanged();
     }
-    return false;
-}
 
-private bool IsTypeSelected(int size, int bitDepth)
-{
-    return _selectedTypes.Contains(new Tuple<int, int>
-    (size, bitDepth));
-}
-
-private bool AreAllBitDepthsSelected(int size)
-{
-    foreach (int bitDepth in BitDepths)
+    private void ToggleBitDepthColumn(int bitDepth)
     {
-        if (!IsTypeSelected(size, bitDepth))
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-private bool AreAllSizesSelected(int bitDepth)
-{
-    foreach (int size in Sizes)
-    {
-        if (!IsTypeSelected(size, bitDepth))
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-private void SetTypeSelected(int size, int bitDepth, bool selected)
-{
-    var type = new Tuple<int, int>(size, bitDepth);
-    if (selected)
-    {
-        _selectedTypes.Add(type);
-    }
-    else
-    {
-        _selectedTypes.Remove(type);
-    }
-}
-
-private void ToggleTypeSelection(int size, int bitDepth)
-{
-    Tuple<int, int> type = new Tuple<int, int>(size, bitDepth);
-    if (_selectedTypes.Contains(type))
-    {
-        _selectedTypes.Remove(type);
-    }
-    else
-    {
-        _selectedTypes.Add(type);
-    }
-    StateHasChanged();
-}
-
-private void ToggleBitDepthColumn(int bitDepth)
-{
-    bool allSelected = AreAllSizesSelected(bitDepth);
-    foreach (int size in Sizes)
-    {
-        SetTypeSelected(size, bitDepth, !allSelected);
-    }
-    StateHasChanged();
-}
-
-private void ToggleSizeRow(int size)
-{
-    bool allSelected = AreAllBitDepthsSelected(size);
-    foreach (int bitDepth in BitDepths)
-    {
-        SetTypeSelected(size, bitDepth, !allSelected);
-    }
-    StateHasChanged();
-}
-
-private void ToggleAll()
-{
-    bool allSelected = AllSelected;
-    foreach (int bitDepth in BitDepths)
-    {
+        bool allSelected = AreAllSizesSelected(bitDepth);
         foreach (int size in Sizes)
         {
             SetTypeSelected(size, bitDepth, !allSelected);
         }
+        StateHasChanged();
     }
-    StateHasChanged();
-}
 
-private async void GenerateEntries()
-{
-    int index = 0;
-    _generatingEntries = true;
-    foreach (int size in Sizes)
+    private void ToggleSizeRow(int size)
     {
-        int smallestDimension = Math.Min(_optionsImage.Width, _optionsImage.Height);
-        Image<Rgba32> baseImage = _optionsImage.Clone(x => x.Crop(smallestDimension, smallestDimension).Resize(size, size));
-        var bitDepths = _selectedTypes.Where(t => t.Item1 == size).Select(t => t.Item2).Distinct().OrderByDescending(x => x);
-        foreach (int bitDepth in bitDepths)
+        bool allSelected = AreAllBitDepthsSelected(size);
+        foreach (int bitDepth in BitDepths)
         {
+            SetTypeSelected(size, bitDepth, !allSelected);
+        }
+        StateHasChanged();
+    }
+
+    private void ToggleAll()
+    {
+        bool allSelected = AllSelected;
+        foreach (int bitDepth in BitDepths)
+        {
+            foreach (int size in Sizes)
+            {
+                SetTypeSelected(size, bitDepth, !allSelected);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private async void GenerateEntries()
+    {
+        if (_optionsImage == null)
+        {
+            return;
+        }
+        int index = 0;
+        _generatingEntries = true;
+        foreach (int size in Sizes)
+        {
+            int smallestDimension = Math.Min(_optionsImage.Width, _optionsImage.Height);
+            Image baseImage = _optionsImage.Clone(x => x.Crop(smallestDimension, smallestDimension).Resize(size, size));
+            var bitDepths = _selectedTypes.Where(t => t.Item1 == size).Select(t => t.Item2).Distinct().OrderByDescending(x => x);
+            foreach (int bitDepth in bitDepths)
+            {
+                if (!_generatingEntries)
+                {
+                    break;
+                }
+                IconEntryDescription description = new IconEntryDescription(
+                size, size, 0, 0, 1, bitDepth, -1, 0, _currentLoadingFilename, index++);
+                _currentEntryGenerationDescription = $"Generating {size}x{size}, {GetNumberOfColorString(bitDepth)}";
+                StateHasChanged();
+                await Task.Delay(10);
+                _entries.Add(baseImage.ToIcoIconEntry(description, _generateAsPng));
+            }
             if (!_generatingEntries)
             {
                 break;
             }
-            IconEntryDescription description = new IconEntryDescription(
-                    size, size, 0, 0, 1, bitDepth, -1, 0, _currentLoadingFilename, index++);
-            _currentEntryGenerationDescription = $"Generating {size}x{size}, {GetNumberOfColorString(bitDepth)}";
-            StateHasChanged();
-            await Task.Delay(10);
-            _entries.Add(baseImage.ToIcoIconEntry(description, _generateAsPng));
         }
-        if (!_generatingEntries)
-        {
-            break;
-        }
-    }
-    _generatingEntries = false;
-    Console.WriteLine("Generated Entries!");
-    _generatingEntriesCompletionSource.SetResult(true);
-    _showingImageOptions = false;
-    _entries = _entries.OrderBy(e => e.Description).ToList();
-    StateHasChanged();
-}
-
-private string GetNumberOfColorString(int bitDepth)
-{
-    if (bitDepth == 1)
-    {
-        return "Black & White";
-    }
-    else if (bitDepth == 24)
-    {
-        return "Full Color";
-    }
-    else if (bitDepth == 32)
-    {
-        return "Full Color + Transparency";
-    }
-    else
-    {
-        return (1 << bitDepth) + " Colors";
-    }
-}
-
-private void SkipCancel()
-{
-    _generatingEntriesCompletionSource.SetResult(false);
-    _showingImageOptions = false;
-    StateHasChanged();
-}
-
-[JSInvokable("GenerateBase64IcoString")]
-public string GenerateBase64IcoString()
-{
-    if (_entries.Count > 0)
-    {
-        using (MemoryStream stream = new MemoryStream())
-        {
-            IconUtils.WriteToStream(_entries, stream);
-            return Convert.ToBase64String(stream.ToArray());
-        }
-    }
-    return null;
-}
-
-[JSInvokable("Clear")]
-public void Clear()
-{
-    _entries.Clear();
-    _selectedEntry = null;
-    StateHasChanged();
-}
-
-[JSInvokable("DeleteSelected")]
-public void DeleteSelected()
-{
-    if (_selectedEntry != null)
-    {
-        _entries.Remove(_selectedEntry);
-        _selectedEntry = null;
+        _generatingEntries = false;
+        Console.WriteLine("Generated Entries!");
+        _generatingEntriesCompletionSource?.SetResult(true);
+        _showingImageOptions = false;
+        _entries = _entries.OrderBy(e => e.Description).ToList();
         StateHasChanged();
     }
-}
 
-[JSInvokable("Select")]
-public void Select(int index)
-{
-    if (index > -1 && index < _entries.Count)
+    private string GetNumberOfColorString(int bitDepth)
     {
-        IIconEntry entry = _entries[index];
-        if (entry == _selectedEntry)
+        if (bitDepth == 1)
         {
-            _selectedEntry = null;
+            return "Black & White";
+        }
+        else if (bitDepth == 24)
+        {
+            return "Full Color";
+        }
+        else if (bitDepth == 32)
+        {
+            return "Full Color + Transparency";
         }
         else
         {
-            _selectedEntry = entry;
+            return (1 << bitDepth) + " Colors";
         }
     }
-    StateHasChanged();
-}
 
-[JSInvokable("GetOutputFilename")]
-public string GetOutputFilename()
-{
-    SortedSet<string> entryNames = new SortedSet<string>();
-    foreach (IIconEntry entry in _entries)
+    private void SkipCancel()
     {
-        string name = Path.GetFileNameWithoutExtension(entry.Description.SourceFileName);
-        // try to strip off trailing size-specific substrings (so e.g. "foo_16x16@3x" => "foo")
-        name = Regex.Replace(name, @"(^\w*?)[_ \(\)@\d][_ \(\)@\dxX]*$", @"$1");
-        entryNames.Add(name);
+        _generatingEntriesCompletionSource?.SetResult(false);
+        _showingImageOptions = false;
+        StateHasChanged();
     }
-    return String.Join("_", entryNames.ToArray()) + ".ico";
-}
 
-protected override void OnInitialized()
-{
-    JSRuntime.InvokeAsync<object>("setDotNetIndexInstance", DotNetObjectReference.Create(this));
-    base.OnInitialized();
-}
+    [JSInvokable("GenerateBase64IcoString")]
+    public string? GenerateBase64IcoString()
+    {
+        if (_entries.Count > 0)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                IconUtils.WriteToStream(_entries, stream);
+                return Convert.ToBase64String(stream.ToArray());
+            }
+        }
+        return null;
+    }
+
+    [JSInvokable("Clear")]
+    public void Clear()
+    {
+        _entries.Clear();
+        _selectedEntry = null;
+        StateHasChanged();
+    }
+
+    [JSInvokable("DeleteSelected")]
+    public void DeleteSelected()
+    {
+        if (_selectedEntry != null)
+        {
+            _entries.Remove(_selectedEntry);
+            _selectedEntry = null;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable("Select")]
+    public void Select(int index)
+    {
+        if (index > -1 && index < _entries.Count)
+        {
+            IIconEntry entry = _entries[index];
+            if (entry == _selectedEntry)
+            {
+                _selectedEntry = null;
+            }
+            else
+            {
+                _selectedEntry = entry;
+            }
+        }
+        StateHasChanged();
+    }
+
+    [JSInvokable("GetOutputFilename")]
+    public string GetOutputFilename()
+    {
+        SortedSet<string> entryNames = new SortedSet<string>();
+        foreach (IIconEntry entry in _entries)
+        {
+            string name = Path.GetFileNameWithoutExtension(entry.Description.SourceFileName) ?? string.Empty;
+            // try to strip off trailing size-specific substrings (so e.g. "foo_16x16@3x" => "foo")
+            name = Regex.Replace(name, @"(^\w*?)[_ \(\)@\d][_ \(\)@\dxX]*$", @"$1");
+            entryNames.Add(name);
+        }
+        return String.Join("_", entryNames.ToArray()) + ".ico";
+    }
+
+    protected override void OnInitialized()
+    {
+        JSRuntime.InvokeAsync<object>("setDotNetIndexInstance", DotNetObjectReference.Create(this));
+        base.OnInitialized();
+    }
 }

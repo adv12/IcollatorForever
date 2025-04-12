@@ -8,6 +8,8 @@ using MiscUtil.IO;
 using MiscUtil.Conversion;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.ComponentModel;
+using SixLabors.ImageSharp.Processing;
 
 namespace IcollatorForever
 {
@@ -16,13 +18,13 @@ namespace IcollatorForever
         private int _startOfXorImage;
         private int _startOfAndImage;
 
-        private Image<Rgba32> _xorImage;
-        private Image<Rgba32> _andImage;
+        private Image<Rgba32>? _xorImage;
+        private Image<Rgba32>? _andImage;
 
-        private string _xorDataUrl;
-        private string _andDataUrl;
+        private string? _xorDataUrl;
+        private string? _andDataUrl;
 
-        private EndianBinaryReader _reader;
+        private EndianBinaryReader? _reader;
 
         public IconEntryDescription Description { get; }
 
@@ -47,7 +49,7 @@ namespace IcollatorForever
                 {
                     if (IsPng)
                     {
-                        _xorImage = Image.Load(Data);
+                        _xorImage = Image.Load<Rgba32>(Data);
                     }
                     else
                     {
@@ -58,7 +60,7 @@ namespace IcollatorForever
             }
         }
 
-        public Image<Rgba32> AndImage
+        public Image<Rgba32>? AndImage
         {
             get
             {
@@ -112,21 +114,22 @@ namespace IcollatorForever
             int totalBytesRead = 0;
             int bytesRead = 0;
             while ((bytesRead = stream.Read(data, totalBytesRead, data.Length - totalBytesRead)) > 0)
-                {
+            {
                 totalBytesRead += bytesRead;
             }
-            SetData(data);
+            Data = data;
+            Init();
         }
 
         public IcoIconEntry(IconEntryDescription description, byte[] data)
         {
             Description = description;
-            SetData(data);
+            Data = data;
+            Init();
         }
 
-        public void SetData(byte[] value)
+        public void Init()
         {
-            Data = value;
             IsPng = true;
             if (Data.Length > 8)
             {
@@ -393,7 +396,7 @@ namespace IcollatorForever
             }
             catch (Exception e)
             {
-                //e.printStackTrace(System.err);
+                Console.WriteLine(e);
             }
             return im;
 
@@ -404,7 +407,7 @@ namespace IcollatorForever
             s.Write(Data, 0, Data.Length);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj == null || obj.GetType() != this.GetType())
             {

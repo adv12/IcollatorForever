@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+﻿// Copyright (c) 2025 Andrew Vardeman.  Published under the MIT license.
 // See license.txt in the IcollatorForever distribution or repository for the
 // full text of the license.
 
@@ -105,7 +105,7 @@ namespace IcollatorForever
         /// Gets an entry matching the specified description. The description should match
         /// one of the elements of EntryDescriptions.
         /// </summary>
-        public IIconEntry GetEntry(IconEntryDescription description)
+        public IIconEntry? GetEntry(IconEntryDescription description)
         {
             if (description == null)
             {
@@ -121,8 +121,8 @@ namespace IcollatorForever
 
         public void Dispose()
         {
-            _stream?.Dispose();
-            _reader?.Dispose();
+            _stream.Dispose();
+            _reader.Dispose();
         }
     }
 }

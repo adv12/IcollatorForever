@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+﻿// Copyright (c) 2025 Andrew Vardeman.  Published under the MIT license.
 // See license.txt in the IcollatorForever distribution or repository for the
 // full text of the license.
 

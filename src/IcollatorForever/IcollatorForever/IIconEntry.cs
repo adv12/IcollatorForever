@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+﻿// Copyright (c) 2025 Andrew Vardeman.  Published under the MIT license.
 // See license.txt in the IcollatorForever distribution or repository for the
 // full text of the license.
 
@@ -16,7 +16,7 @@ namespace IcollatorForever
         bool HasAndImage { get; }
 
         Image<Rgba32> XorImage { get; }
-        Image<Rgba32> AndImage { get; }
+        Image<Rgba32>? AndImage { get; }
 
         string XorDataUrl { get; }
         string AndDataUrl { get; }

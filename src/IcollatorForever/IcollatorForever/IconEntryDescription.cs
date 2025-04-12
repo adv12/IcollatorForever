@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 Andrew Vardeman.  Published under the MIT license.
+﻿// Copyright (c) 2025 Andrew Vardeman.  Published under the MIT license.
 // See license.txt in the IcollatorForever distribution or repository for the
 // full text of the license.
 
@@ -17,12 +17,12 @@ namespace IcollatorForever
         public int BitCount { get; private set; }
         public int SizeInBytes { get; private set; }
         public int FileOffset { get; }
-        public string SourceFileName { get; }
+        public string? SourceFileName { get; }
         public int SourceIndex { get; }
 
         public IconEntryDescription(int width, int height, int colorCount,
             byte reservedByte, int planes, int bitCount,
-            int sizeInBytes, int fileOffset, string sourceFileName,
+            int sizeInBytes, int fileOffset, string? sourceFileName,
             int indexInSourceFile)
         {
             Width = width;
@@ -57,12 +57,12 @@ namespace IcollatorForever
             BitCount = bitCount;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as IconEntryDescription);
         }
 
-        public bool Equals(IconEntryDescription other)
+        public bool Equals(IconEntryDescription? other)
         {
             return other != null &&
                    Width == other.Width &&
@@ -79,26 +79,16 @@ namespace IcollatorForever
 
         public override int GetHashCode()
         {
-            unchecked // Overflow is fine, just wrap
-            {
-                int hash = 17;
-                // Suitable nullity checks etc, of course :)
-                hash = hash * 23 + Width.GetHashCode();
-                hash = hash * 23 + Height.GetHashCode();
-                hash = hash * 23 + ColorCount.GetHashCode();
-                hash = hash * 23 + ReservedByte.GetHashCode();
-                hash = hash * 23 + Planes.GetHashCode();
-                hash = hash * 23 + BitCount.GetHashCode();
-                hash = hash * 23 + SizeInBytes.GetHashCode();
-                hash = hash * 23 + FileOffset.GetHashCode();
-                hash = hash * 23 + (SourceFileName == null ? 1 : SourceFileName.GetHashCode());
-                hash = hash * 23 + SourceIndex.GetHashCode();
-                return hash;
-            }
+            return HashCode.Combine(HashCode.Combine(Width, Height, ColorCount, ReservedByte),
+            HashCode.Combine(Planes, BitCount, SizeInBytes, FileOffset, SourceFileName, SourceIndex));
         }
 
-        public int CompareTo(IconEntryDescription other)
+        public int CompareTo(IconEntryDescription? other)
         {
+            if (other == null)
+            {
+                return 1;
+            }
             if (this.Width > other.Width)
             {
                 return 1;
