@@ -97,7 +97,6 @@ full text of the license.
         Check the box for each combination of size and color count you want to add from @(_currentLoadingFilename ??
             "the image").
     Then click "Generate Entries" to add them to your icon.
-    This will freeze your browser for a ridiculous amount of time, so be patient.
     </p>
     <p>
         (If you're providing individual images at all the sizes and color counts you want, just select the appropriate size and color count for this image.)
@@ -510,7 +509,7 @@ full text of the license.
                     break;
                 }
                 IconEntryDescription description = new IconEntryDescription(
-                size, size, 0, 0, 1, bitDepth, -1, 0, _currentLoadingFilename, index++);
+                size, size, 1 << bitDepth, 0, 1, bitDepth, -1, 0, _currentLoadingFilename, index++);
                 _currentEntryGenerationDescription = $"Generating {size}x{size}, {GetNumberOfColorString(bitDepth)}";
                 StateHasChanged();
                 await Task.Delay(10);
